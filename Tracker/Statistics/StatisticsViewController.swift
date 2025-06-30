@@ -8,18 +8,13 @@
 import UIKit
 
 class StatisticsViewController: UIViewController {
-    
-    
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         setupAppearance()
     }
     
     private func setupAppearance() {
         view.backgroundColor = .white
     }
-
-
 }
 

@@ -64,11 +64,11 @@ final class TrackerCard: UICollectionViewCell {
         return label
     }()
     
-    lazy private var nameLabel: UILabel = {
-        let label = UILabel()
+    lazy private var nameLabel: BottomAlignedLabel = {
+        let label = BottomAlignedLabel()
         label.textColor = .white
         label.textAlignment = .left
-        label.contentMode = .bottom
+        
         label.numberOfLines = 2
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.text = "Кошка заслонила камеру на созвоне"
@@ -201,7 +201,7 @@ extension TrackerCard {
         NSLayoutConstraint.activate([
             nameLabel.leadingAnchor.constraint(equalTo: quantityView.leadingAnchor, constant: ViewConstants.sidesIndent),
             nameLabel.trailingAnchor.constraint(equalTo: quantityView.trailingAnchor, constant: -ViewConstants.sidesIndent),
-            nameLabel.bottomAnchor.constraint(equalTo: quantityView.bottomAnchor, constant: -ViewConstants.sidesIndent),
+            nameLabel.bottomAnchor.constraint(equalTo: quantityView.bottomAnchor, constant: -12),
             nameLabel.topAnchor.constraint(equalTo: emojiLabel.bottomAnchor, constant: 8),
         ])
     }

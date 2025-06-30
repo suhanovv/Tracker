@@ -9,7 +9,7 @@ import UIKit
 
 // MARK: - TrackersViewController
 
-class TrackersViewController: UIViewController {
+final class TrackersViewController: UIViewController {
     
     private enum ViewConstants {
         static let sidesIndent: CGFloat = 16
@@ -23,7 +23,7 @@ class TrackersViewController: UIViewController {
     private var trackerRepositoryObserver: NSObjectProtocol?
     private var categories: [TrackerCategory] = []
     private var completedTrackers: Set<TrackerRecord> = []
-    private var currentDate: Date = Date()
+    private var currentDate: Date = Calendar.current.startOfDay(for: Date())
     private var currentSearchText: String?
     
     // MARK: - UI elements
@@ -33,7 +33,6 @@ class TrackersViewController: UIViewController {
         datePicker.datePickerMode = .date
         datePicker.preferredDatePickerStyle = .compact
         datePicker.tintColor = .ypBlack
-        datePicker.locale = Locale(identifier: Constants.localeIdentifier)
         datePicker.translatesAutoresizingMaskIntoConstraints = false
         datePicker.addTarget(
             self, action: #selector(datePickerValueChanged), for: .valueChanged)
@@ -81,7 +80,7 @@ class TrackersViewController: UIViewController {
     }
     
     @objc func datePickerValueChanged(_ sender: UIDatePicker) {
-        currentDate = sender.date
+        currentDate = Calendar.current.startOfDay(for: sender.date)
         updateCategories()
     }
     
@@ -162,9 +161,7 @@ extension TrackersViewController: UICollectionViewDataSource {
         let category = categories[indexPath.section]
         let tracker = category.trackers[indexPath.row]
         let checkedDays = completedTrackers.filter { $0.trackerId == tracker.id }
-        let isChecked: Bool = checkedDays.first(
-            where: { $0.date == currentDate
-            }) != nil
+        let isChecked: Bool = checkedDays.first(where: { $0.date == currentDate }) != nil
         
         let isActive = Date() >= currentDate
         cell.configure(tracker: tracker, checkedDaysCount: checkedDays.count, isChecked: isChecked, isActive: isActive)
@@ -180,7 +177,6 @@ extension TrackersViewController: UICollectionViewDelegateFlowLayout {
         layout collectionViewLayout: UICollectionViewLayout,
         sizeForItemAt indexPath: IndexPath
     ) -> CGSize {
-        #warning("Вытащить в константы")
         let paddingWidth: CGFloat = ViewConstants.sidesIndent * ViewConstants.columnsCount + ViewConstants.columnsCount * ViewConstants.interitemSpacing / 2
         let availableWidth = collectionView.frame.width - paddingWidth
         let cellWidth = availableWidth / CGFloat(ViewConstants.columnsCount)

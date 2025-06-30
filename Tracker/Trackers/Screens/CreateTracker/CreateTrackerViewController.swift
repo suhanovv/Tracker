@@ -15,9 +15,9 @@ final class CreateTrackerViewController: UIViewController {
         static let sideIndent: CGFloat = 20
     }
     
-    lazy var habbitButton: UIButton = makeButton(title: "Привычка")
-    lazy var unregularEventButton: UIButton = makeButton(title: "Нерегулярное событие")
-    lazy var stack: UIStackView = {
+    private lazy var habbitButton: UIButton = makeButton(title: "Привычка")
+    private lazy var unregularEventButton: UIButton = makeButton(title: "Нерегулярное событие")
+    private lazy var stack: UIStackView = {
         let stack = UIStackView(arrangedSubviews: [habbitButton, unregularEventButton])
         stack.axis = .vertical
         stack.spacing = 16

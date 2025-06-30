@@ -32,7 +32,7 @@ enum DayOfWeek: String, CaseIterable {
     
     static func dayOfWeekFromDate(_ date: Date) -> DayOfWeek {
         var calendar = Calendar.current
-        calendar.locale = Locale(identifier: Constants.localeIdentifier)
+        calendar.locale = Locale(identifier: "ru_RU")
         
         let weekdaynumber = calendar.component(.weekday, from: date)
         let weekdaystring = calendar.standaloneWeekdaySymbols[weekdaynumber - 1]

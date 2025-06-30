@@ -19,7 +19,7 @@ final class ScheduleCell: UIView {
     
     weak var delegate: ScheduleCellDelegate?
     
-    lazy private var label: UILabel = {
+    private lazy var label: UILabel = {
         let label = UILabel()
         label.textColor = .ypBlack
         label.font = .systemFont(ofSize: 17, weight: .regular)
@@ -29,13 +29,14 @@ final class ScheduleCell: UIView {
         return label
     }()
     
-    lazy private var checkbox: UISwitch = {
+    private lazy var checkbox: UISwitch = {
         let view = UISwitch()
+        view.onTintColor = .ypBlue
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
     
-    lazy private var viewDivider: UIView = {
+    private lazy var viewDivider: UIView = {
         let view = UIView()
         view.backgroundColor = .ypGrey
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -104,7 +105,7 @@ final class ScheduleCell: UIView {
         self.label.text = label
     }
     
-    @objc func toggleCheckbox() {
+    @objc private func toggleCheckbox() {
         delegate?.scheduleDidChangeValue(day, isOn: checkbox.isOn)
     }
     

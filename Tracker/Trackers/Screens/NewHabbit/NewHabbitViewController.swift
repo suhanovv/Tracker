@@ -25,6 +25,8 @@ final class NewHabbitViewController: UIViewController {
     private enum ViewConstants {
         static let sidesIndent: CGFloat = 16
         static let lementsHeight: CGFloat = 24
+        static let activeCreateButtonColor: UIColor = .ypBlack
+        static let inactiveCreateButtonColor: UIColor = .ypGrey
         
     }
     
@@ -93,7 +95,7 @@ final class NewHabbitViewController: UIViewController {
         button.setTitleColor(.ypWhite, for: .normal)
         button.layer.cornerRadius = Constants.cornerRadius
         button.layer.masksToBounds = true
-        button.backgroundColor = .ypGrey
+        button.backgroundColor = ViewConstants.inactiveCreateButtonColor
         button.isEnabled = false
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(handleCreateButtonTapped), for: .touchUpInside)
@@ -281,10 +283,12 @@ extension NewHabbitViewController: NewHabbitViewControllerProtocol {
 
     func deactivateCreateButton() {
         createButton.isEnabled = false
+        createButton.backgroundColor = ViewConstants.inactiveCreateButtonColor
     }
 
     func activateCreateButton() {
         createButton.isEnabled = true
+        createButton.backgroundColor = ViewConstants.activeCreateButtonColor
     }
     
     func updateSelectedCategoryCaption(_ caption: String) {

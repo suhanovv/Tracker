@@ -9,5 +9,4 @@ import Foundation
 
 enum Constants {
     static let cornerRadius: CGFloat = 16
-    static let localeIdentifier: String = "ru_RU"
 }
