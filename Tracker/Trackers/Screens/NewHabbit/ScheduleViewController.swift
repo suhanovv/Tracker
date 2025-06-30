@@ -18,7 +18,7 @@ final class ScheduleViewController: UIViewController {
     
     private var selectedDays: Set<DayOfWeek> = []
     
-    lazy private var weekDaysStackViewWrapper: UIView = {
+    private lazy var weekDaysStackViewWrapper: UIView = {
         let view = UIView()
         view.backgroundColor = .ypInputGrey
         view.layer.cornerRadius = Constants.cornerRadius
@@ -28,7 +28,7 @@ final class ScheduleViewController: UIViewController {
         return view
     }()
     
-    lazy private var weekDaysStackView: UIStackView = {
+    private lazy var weekDaysStackView: UIStackView = {
         let view = UIStackView(arrangedSubviews: [])
         view.axis = .vertical
         view.distribution = .fillEqually
@@ -37,7 +37,7 @@ final class ScheduleViewController: UIViewController {
         return view
     }()
     
-    lazy private var okButton: UIButton = {
+    private lazy var okButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Готово", for: .normal)
         button.setTitleColor(.  ypWhite, for: .normal)
