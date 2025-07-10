@@ -7,7 +7,9 @@
 
 import Foundation
 
-enum DayOfWeek: String, CaseIterable {
+
+public enum DayOfWeek: String, CaseIterable, Codable {
+
     case monday = "Понедельник"
     case tuesday = "Вторник"
     case wednesday = "Среда"
@@ -16,7 +18,15 @@ enum DayOfWeek: String, CaseIterable {
     case saturday = "Суббота"
     case sunday = "Воскресенье"
     
-    static var allCases: [DayOfWeek] = [.monday, .tuesday, .wednesday, .thursday, .friday, .saturday, .sunday]
+    public static var allCases: [DayOfWeek] = [
+        .monday,
+        .tuesday,
+        .wednesday,
+        .thursday,
+        .friday,
+        .saturday,
+        .sunday
+    ]
     
     func shortName() -> String {
         switch self {

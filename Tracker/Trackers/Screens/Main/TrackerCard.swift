@@ -10,8 +10,8 @@ import UIKit
 // MARK: - TrackerCardDelegateProtocol
 
 protocol TrackerCardDelegateProtocol: AnyObject {
-    func didCheckTracker(trackerId: UUID, completion: @escaping (Int) -> Void)
-    func didUncheckTracker(trackerId: UUID, completion: @escaping (Int) -> Void)
+    func didCheckTracker(_ tracker: Tracker)
+    func didUncheckTracker(_ tracker: Tracker)
 }
 
 // MARK: - TrackerCard
@@ -120,26 +120,20 @@ final class TrackerCard: UICollectionViewCell {
     @objc private func handlePlusButtonTapped() {
         guard let tracker else { return }
         
-        isChecked = !isChecked
         if isChecked {
-            delegate?.didCheckTracker(trackerId: tracker.id) {[weak self] days in
-                self?.checkedDaysCount = days
-            }
+            delegate?.didUncheckTracker(tracker)
         } else {
-            delegate?.didUncheckTracker(trackerId: tracker.id) {[weak self] days in
-                self?.checkedDaysCount = days
-            }
+            delegate?.didCheckTracker(tracker)
         }
-        updateUI()
     }
     
     private func uncheckedButtonState(_ tracker: Tracker) {
-        plusButton.backgroundColor = tracker.color.withAlphaComponent(1)
+        plusButton.backgroundColor = UIColor.fromCardColor(tracker.color).withAlphaComponent(1)
         plusButton.setImage(UIImage(systemName: "plus"), for: .normal)
     }
     
     private func checkedButtonState(_ tracker: Tracker) {
-        plusButton.backgroundColor = tracker.color.withAlphaComponent(0.3)
+        plusButton.backgroundColor = UIColor.fromCardColor(tracker.color).withAlphaComponent(0.3)
         plusButton.setImage(UIImage(systemName: "checkmark"), for: .normal)
     }
 }
@@ -228,27 +222,19 @@ extension TrackerCard {
 // MARK: - TrackerCard data population
 extension TrackerCard {
     
-    private func updateUI() {
-        guard let tracker else { return }
+    func configure(tracker: Tracker, isChecked: Bool, isActive: Bool = true) {
+        self.tracker = tracker
+        self.isChecked = isChecked
+        daysLabel.text = String.pluralize(days: tracker.countChecks)
         emojiLabel.text = tracker.emoji
         nameLabel.text = tracker.name
-        daysLabel.text = String.pluralize(days: checkedDaysCount)
-        quantityView.backgroundColor = tracker.color
+        quantityView.backgroundColor = UIColor.fromCardColor(tracker.color)
         plusButton.isEnabled = isActive
-        
         if isChecked {
             checkedButtonState(tracker)
         } else {
             uncheckedButtonState(tracker)
         }
-    }
-    
-    func configure(tracker: Tracker, checkedDaysCount: Int, isChecked: Bool, isActive: Bool = true) {
-        self.tracker = tracker
-        self.checkedDaysCount = checkedDaysCount
-        self.isChecked = isChecked
-        self.isActive = isActive
         
-        updateUI()
     }
 }

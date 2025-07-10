@@ -5,40 +5,31 @@
 //  Created by Вадим Суханов on 13.06.2025.
 //
 
-import UIKit
+import Foundation
 
 struct Tracker {
     let id: UUID
     let name: String
-    let color: UIColor
+    let color: CardColor
     let emoji: String
     let schedule: [DayOfWeek]
+    let countChecks: Int
     
-    init(id: UUID, name: String, color: UIColor, emoji: String, schedule: [DayOfWeek]) {
+    init(id: UUID, name: String, color: CardColor, emoji: String, schedule: [DayOfWeek], countChecks: Int) {
         self.id = id
         self.name = name
         self.color = color
         self.emoji = emoji
         self.schedule = schedule
+        self.countChecks = countChecks
     }
     
-    init(name: String, color: UIColor, emoji: String, schedule: [DayOfWeek]) {
+    init(name: String, color: CardColor, emoji: String, schedule: [DayOfWeek]) {
         self.id = UUID()
         self.name = name
         self.color = color
         self.emoji = emoji
         self.schedule = schedule
-    }
-    
-    init(name: String, schedule: [DayOfWeek]) {
-        self.id = UUID()
-        self.name = name
-        self.color = [
-            UIColor.cardColor2,
-            UIColor.cardColor3,
-            UIColor.cardColor5
-        ].randomElement() ?? .cardColor1
-        self.emoji = "😪"
-        self.schedule = schedule
+        self.countChecks = 0
     }
 }
