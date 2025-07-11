@@ -76,13 +76,12 @@ final class TrackerDataProvider: NSObject {
                     #keyPath(TrackerEntity.name), name))
         }
         return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-        
     }
 }
 
 // MARK: - NSFetchedResultsControllerDelegate
 extension TrackerDataProvider: NSFetchedResultsControllerDelegate{
-    
+
     func controller(_ controller: NSFetchedResultsController<any NSFetchRequestResult>, didChange sectionInfo: any NSFetchedResultsSectionInfo, atSectionIndex sectionIndex: Int, for type: NSFetchedResultsChangeType) {
         switch type {
         case .delete:
@@ -107,40 +106,48 @@ extension TrackerDataProvider: NSFetchedResultsControllerDelegate{
     }
 
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        delegate?.didUpdate(TrackerStoreUpdate(
-                insertedIndexes: insertedIndexes!,
-                deletedIndexes: deletedIndexes!,
-                updatedIndexes: updatedIndexes!,
+        guard
+           let insertedIndexes,
+           let deletedIndexes,
+           let updatedIndexes,
+           let insertedSections,
+           let deletedSections,
+           let updatedSections,
+           let delegate
+        else { return }
+        delegate.didUpdate(TrackerStoreUpdate(
+                insertedIndexes: insertedIndexes,
+                deletedIndexes: deletedIndexes,
+                updatedIndexes: updatedIndexes,
                 
-                insertedSections: insertedSections!,
-                deletedSections: deletedSections!,
-                updatedSections: updatedSections!
+                insertedSections: insertedSections,
+                deletedSections: deletedSections,
+                updatedSections: updatedSections
             )
         )
-        insertedIndexes = nil
-        deletedIndexes = nil
-        updatedIndexes = nil
+        self.insertedIndexes = nil
+        self.deletedIndexes = nil
+        self.updatedIndexes = nil
         
-        insertedSections = nil
-        deletedSections = nil
-        updatedSections = nil
+        self.insertedSections = nil
+        self.deletedSections = nil
+        self.updatedSections = nil
     }
     
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
         
         switch type {
         case .delete:
-            if let indexPath = indexPath {
-                deletedIndexes?.insert(indexPath)
-            }
+            guard let indexPath else { return }
+            deletedIndexes?.insert(indexPath)
+            
         case .insert:
-            if let indexPath = newIndexPath {
-                insertedIndexes?.insert(indexPath)
-            }
+            guard let newIndexPath else { return }
+            insertedIndexes?.insert(newIndexPath)
+            
         case .update:
-            if let indexPath = indexPath {
-                updatedIndexes?.insert(indexPath)
-            }
+            guard let indexPath else { return }
+            updatedIndexes?.insert(indexPath)
             
         default:
             break
@@ -187,5 +194,4 @@ extension TrackerDataProvider: TrackerDataProviderProtocol {
         fetchedResultsController?.fetchRequest.predicate = makeFilterPredicate(filter: filter)
         try? fetchedResultsController?.performFetch()
     }
-    
 }

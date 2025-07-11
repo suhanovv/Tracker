@@ -9,7 +9,7 @@ import UIKit
 
 final class NewHabbitViewControlllerFactory: ViewControllerFactoryProtocol {
     func make() -> UIViewController {
-        let vc = NewHabbitViewController()
+        let vc = NewHabitViewController()
         let presenter = NewHabbitViewPresenter(view: vc)
         vc.presenter = presenter
         return vc

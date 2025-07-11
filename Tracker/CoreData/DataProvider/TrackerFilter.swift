@@ -5,7 +5,6 @@
 //  Created by Вадим Суханов on 10.07.2025.
 //
 
-
 struct TrackerFilter {
     let dayOfWeek: DayOfWeek
     let name: String?

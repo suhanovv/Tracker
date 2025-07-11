@@ -118,12 +118,16 @@ final class TrackerCard: UICollectionViewCell {
     }
     
     @objc private func handlePlusButtonTapped() {
-        guard let tracker else { return }
+        guard
+            let tracker,
+            let delegate
+        else { return }
         
-        if isChecked {
-            delegate?.didUncheckTracker(tracker)
-        } else {
-            delegate?.didCheckTracker(tracker)
+        switch isChecked {
+        case true:
+            delegate.didUncheckTracker(tracker)
+        case false:
+            delegate.didCheckTracker(tracker)
         }
     }
     

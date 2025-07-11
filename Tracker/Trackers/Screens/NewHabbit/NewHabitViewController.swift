@@ -21,7 +21,7 @@ protocol NewHabbitViewControllerProtocol: AnyObject {
 
 // MARK: - NewHabbitViewController
 
-final class NewHabbitViewController: UIViewController {
+final class NewHabitViewController: UIViewController {
     private enum ViewConstants {
         static let sidesIndent: CGFloat = 16
         static let lementsHeight: CGFloat = 24
@@ -184,7 +184,7 @@ final class NewHabbitViewController: UIViewController {
 
 // MARK: - UITextFieldDelegate
 
-extension NewHabbitViewController: UITextFieldDelegate {
+extension NewHabitViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
     }
@@ -192,7 +192,7 @@ extension NewHabbitViewController: UITextFieldDelegate {
 
 // MARK: - NewHabbitViewController Constraints
 
-extension NewHabbitViewController {
+extension NewHabitViewController {
     private func setupConstraints() {
         setupTrackerNameTextFieldConstraints()
         setupMenuButtonWrapperViewConstraints()
@@ -275,7 +275,7 @@ extension NewHabbitViewController {
 
 // MARK: - NewHabbitViewController Handlers
 
-extension NewHabbitViewController {
+extension NewHabitViewController {
     
     @objc private func textFieldDidChange(sender: UITextField) {
         guard
@@ -312,7 +312,7 @@ extension NewHabbitViewController {
 
 // MARK: - ScheduleViewControllerDelegate
 
-extension NewHabbitViewController: ScheduleViewControllerDelegate {
+extension NewHabitViewController: ScheduleViewControllerDelegate {
     func scheduleChanged(_ schedule: [DayOfWeek]) {
         guard let presenter else { return }
         presenter.scheduleChanged(schedule)
@@ -320,7 +320,7 @@ extension NewHabbitViewController: ScheduleViewControllerDelegate {
 }
 
 // MARK: - UICollectionViewDataSource
-extension NewHabbitViewController: UICollectionViewDataSource {
+extension NewHabitViewController: UICollectionViewDataSource {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         return 2
     }
@@ -444,13 +444,11 @@ extension NewHabbitViewController: UICollectionViewDataSource {
                 presenter?.colorChanged(nil)
         }
     }
-    
-    
 }
 
 // MARK: - UICollectionViewDelegateFlowLayout
 
-extension NewHabbitViewController: UICollectionViewDelegateFlowLayout {
+extension NewHabitViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         return CGSize(width: 52, height: 52)
     }
@@ -480,7 +478,7 @@ extension NewHabbitViewController: UICollectionViewDelegateFlowLayout {
 
 // MARK: - NewHabbitViewControllerProtocol
 
-extension NewHabbitViewController: NewHabbitViewControllerProtocol {
+extension NewHabitViewController: NewHabbitViewControllerProtocol {
     func showTrackerNameError() {
         trackerNameTextField.showError()
     }
