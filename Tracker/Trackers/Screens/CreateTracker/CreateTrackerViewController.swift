@@ -15,10 +15,10 @@ final class CreateTrackerViewController: UIViewController {
         static let sideIndent: CGFloat = 20
     }
     
-    private lazy var habbitButton: UIButton = makeButton(title: "Привычка")
+    private lazy var habitButton: UIButton = makeButton(title: "Привычка")
     private lazy var unregularEventButton: UIButton = makeButton(title: "Нерегулярное событие")
     private lazy var stack: UIStackView = {
-        let stack = UIStackView(arrangedSubviews: [habbitButton, unregularEventButton])
+        let stack = UIStackView(arrangedSubviews: [habitButton, unregularEventButton])
         stack.axis = .vertical
         stack.spacing = 16
         stack.translatesAutoresizingMaskIntoConstraints = false
@@ -45,7 +45,7 @@ final class CreateTrackerViewController: UIViewController {
     private func setupConstraints() {
         NSLayoutConstraint.activate(
 [
-            habbitButton.heightAnchor.constraint(equalToConstant: ViewConstants.buttonHeihgt),
+            habitButton.heightAnchor.constraint(equalToConstant: ViewConstants.buttonHeihgt),
             unregularEventButton.heightAnchor.constraint(equalToConstant: ViewConstants.buttonHeihgt),
             
             stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: ViewConstants.sideIndent),
@@ -72,11 +72,11 @@ final class CreateTrackerViewController: UIViewController {
     }
     
     private func setupButtonHandlers() {
-        habbitButton.addTarget(self, action: #selector(handleHabbitButtonTapped), for: .touchUpInside)
+        habitButton.addTarget(self, action: #selector(handleHabitButtonTapped), for: .touchUpInside)
     }
     
-    @objc private func handleHabbitButtonTapped() {
-        let newHabbitVC = NewHabbitViewControlllerFactory().make()
-        navigationController?.pushViewController(newHabbitVC, animated: true)
+    @objc private func handleHabitButtonTapped() {
+        let newHabitVC = NewHabitViewControlllerFactory().make()
+        navigationController?.pushViewController(newHabitVC, animated: true)
     }
 }

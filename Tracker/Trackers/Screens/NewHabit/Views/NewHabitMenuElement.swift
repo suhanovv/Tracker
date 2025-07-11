@@ -1,5 +1,5 @@
 //
-//  NewHabbitMenuElement.swift
+//  NewHabitMenuElement.swift
 //  Tracker
 //
 //  Created by Вадим Суханов on 21.06.2025.
@@ -7,9 +7,9 @@
 
 import UIKit
 
-// MARK: - NewHabbitMenuElement
+// MARK: - NewHabitMenuElement
 
-final class NewHabbitMenuElement: UIControl {
+final class NewHabitMenuElement: UIControl {
     
     lazy private var label: UILabel = {
         let label = UILabel()

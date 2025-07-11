@@ -7,9 +7,9 @@
 
 import UIKit
 
-// MARK: - NewHabbitViewControllerProtocol
+// MARK: - NewHabitViewControllerProtocol
 
-protocol NewHabbitViewControllerProtocol: AnyObject {
+protocol NewHabitViewControllerProtocol: AnyObject {
     func showTrackerNameError()
     func hideTrackerNameError()
     func deactivateCreateButton()
@@ -19,7 +19,7 @@ protocol NewHabbitViewControllerProtocol: AnyObject {
 }
 
 
-// MARK: - NewHabbitViewController
+// MARK: - NewHabitViewController
 
 final class NewHabitViewController: UIViewController {
     private enum ViewConstants {
@@ -30,7 +30,7 @@ final class NewHabitViewController: UIViewController {
         
     }
     
-    var presenter: NewHabbitViewPresenterProtocol?
+    var presenter: NewHabitViewPresenterProtocol?
     private let emojis: [String] = [
         "🙂", "😻", "🌺", "🐶", "❤️", "😱",
         "😇", "😡", "🥶", "🤔", "🙌", "🍔",
@@ -67,16 +67,16 @@ final class NewHabitViewController: UIViewController {
         return view
     }()
     
-    lazy private var categoryButton: NewHabbitMenuElement = {
+    lazy private var categoryButton: NewHabitMenuElement = {
         let subTitle = presenter?.getSelectedCategory()?.name
-        let view = NewHabbitMenuElement(with: "Категория", subTitle: subTitle, divider: true)
+        let view = NewHabitMenuElement(with: "Категория", subTitle: subTitle, divider: true)
         view.translatesAutoresizingMaskIntoConstraints = false
         view.addTarget(self, action: #selector(handleCategoryButtonTapped), for: .touchUpInside)
         return view
     }()
     
-    lazy private var scheduleButton: NewHabbitMenuElement = {
-        let view = NewHabbitMenuElement(with: "Расписание", divider: false)
+    lazy private var scheduleButton: NewHabitMenuElement = {
+        let view = NewHabitMenuElement(with: "Расписание", divider: false)
         view.translatesAutoresizingMaskIntoConstraints = false
         view.addTarget(self, action: #selector(handleScheduleButtonTapped), for: .touchUpInside)
         return view
@@ -190,7 +190,7 @@ extension NewHabitViewController: UITextFieldDelegate {
     }
 }
 
-// MARK: - NewHabbitViewController Constraints
+// MARK: - NewHabitViewController Constraints
 
 extension NewHabitViewController {
     private func setupConstraints() {
@@ -273,7 +273,7 @@ extension NewHabitViewController {
     }
 }
 
-// MARK: - NewHabbitViewController Handlers
+// MARK: - NewHabitViewController Handlers
 
 extension NewHabitViewController {
     
@@ -476,9 +476,9 @@ extension NewHabitViewController: UICollectionViewDelegateFlowLayout {
     }
 }
 
-// MARK: - NewHabbitViewControllerProtocol
+// MARK: - NewHabitViewControllerProtocol
 
-extension NewHabitViewController: NewHabbitViewControllerProtocol {
+extension NewHabitViewController: NewHabitViewControllerProtocol {
     func showTrackerNameError() {
         trackerNameTextField.showError()
     }

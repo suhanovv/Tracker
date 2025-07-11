@@ -1,5 +1,5 @@
 //
-//  NewHabbitViewPresenter.swift
+//  NewHabitViewPresenter.swift
 //  Tracker
 //
 //  Created by Вадим Суханов on 27.06.2025.
@@ -7,8 +7,8 @@
 
 import Foundation
 
-// MARK: - NewHabbitViewPresenterProtocol
-protocol NewHabbitViewPresenterProtocol: AnyObject {
+// MARK: - NewHabitViewPresenterProtocol
+protocol NewHabitViewPresenterProtocol: AnyObject {
     func trackerNameChanged(_ name: String)
     func scheduleChanged(_ schedule: [DayOfWeek])
     func categoryChanged(_ category: TrackerCategory?)
@@ -20,10 +20,10 @@ protocol NewHabbitViewPresenterProtocol: AnyObject {
     
 }
 
-// MARK: - NewHabbitViewPresenter
-final class NewHabbitViewPresenter: NewHabbitViewPresenterProtocol {
+// MARK: - NewHabitViewPresenter
+final class NewHabitViewPresenter: NewHabitViewPresenterProtocol {
     
-    private weak var view: NewHabbitViewControllerProtocol?
+    private weak var view: NewHabitViewControllerProtocol?
 
     
     private var trackerName: String = ""
@@ -37,7 +37,7 @@ final class NewHabbitViewPresenter: NewHabbitViewPresenterProtocol {
     private let trackerCategoryStore = TrackerCategoryStore()
     private let trackerStore = TrackerStore()
 
-    init(view: NewHabbitViewControllerProtocol) {
+    init(view: NewHabitViewControllerProtocol) {
         self.view = view
         
         // TODO: убрать в 16 спринте
