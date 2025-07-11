@@ -8,7 +8,6 @@
 import CoreData
 import UIKit
 
-
 protocol TrackerRecordStoreProtocol {
     func create(_ record: TrackerRecord) throws
     func remove(_ record: TrackerRecord) throws

@@ -37,15 +37,13 @@ final class TrackerCategoryStore: TrackerCategoryStoreProtocol {
     
     func getAll() throws -> [TrackerCategory] {
         let fetchRequest = TrackerCategoryEntity.fetchRequest()
-        let trackerCategoryEntities = try context.fetch(fetchRequest)
-        return try trackerCategoryEntities.map { entity in
-            if let domain = entity.toDomainModel() {
-                return domain
-            } else {
+        let entities = try context.fetch(fetchRequest)
+        
+        return try entities.map {
+            guard let domain = $0.toDomainModel() else {
                 throw TrackerCategoryStoreError.decodingErrorInvalidCategory
             }
-            
+            return domain
         }
     }
-    
 }

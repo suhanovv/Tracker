@@ -5,7 +5,6 @@
 //  Created by Вадим Суханов on 03.07.2025.
 //
 
-
 enum CardColor: String, CaseIterable {
     case cardColor1 = "CardColor1"
     case cardColor2 = "CardColor2"
@@ -26,4 +25,3 @@ enum CardColor: String, CaseIterable {
     case cardColor17 = "CardColor17"
     case cardColor18 = "CardColor18"
 }
-
