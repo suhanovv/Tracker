@@ -9,4 +9,5 @@ import Foundation
 
 enum Constants {
     static let cornerRadius: CGFloat = 16
+    static let defaultDate: Date = Calendar.current.startOfDay(for: Date())
 }

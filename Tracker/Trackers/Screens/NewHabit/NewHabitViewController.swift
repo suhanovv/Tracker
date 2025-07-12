@@ -7,9 +7,9 @@
 
 import UIKit
 
-// MARK: - NewHabbitViewControllerProtocol
+// MARK: - NewHabitViewControllerProtocol
 
-protocol NewHabbitViewControllerProtocol: AnyObject {
+protocol NewHabitViewControllerProtocol: AnyObject {
     func showTrackerNameError()
     func hideTrackerNameError()
     func deactivateCreateButton()
@@ -19,9 +19,9 @@ protocol NewHabbitViewControllerProtocol: AnyObject {
 }
 
 
-// MARK: - NewHabbitViewController
+// MARK: - NewHabitViewController
 
-final class NewHabbitViewController: UIViewController {
+final class NewHabitViewController: UIViewController {
     private enum ViewConstants {
         static let sidesIndent: CGFloat = 16
         static let lementsHeight: CGFloat = 24
@@ -30,7 +30,16 @@ final class NewHabbitViewController: UIViewController {
         
     }
     
-    var presenter: NewHabbitViewPresenterProtocol?
+    var presenter: NewHabitViewPresenterProtocol?
+    private let emojis: [String] = [
+        "🙂", "😻", "🌺", "🐶", "❤️", "😱",
+        "😇", "😡", "🥶", "🤔", "🙌", "🍔",
+        "🥦", "🏓", "🥇", "🎸", "🏝", "😪"
+    ]
+    
+    
+    private let headers: [String] = ["Emoji", "Цвет"]
+    
     
     // MARK: - UI Elements
     lazy private var trackerNameTextField: TrackerNameTextFieldView = {
@@ -58,16 +67,16 @@ final class NewHabbitViewController: UIViewController {
         return view
     }()
     
-    lazy private var categoryButton: NewHabbitMenuElement = {
+    lazy private var categoryButton: NewHabitMenuElement = {
         let subTitle = presenter?.getSelectedCategory()?.name
-        let view = NewHabbitMenuElement(with: "Категория", subTitle: subTitle, divider: true)
+        let view = NewHabitMenuElement(with: "Категория", subTitle: subTitle, divider: true)
         view.translatesAutoresizingMaskIntoConstraints = false
         view.addTarget(self, action: #selector(handleCategoryButtonTapped), for: .touchUpInside)
         return view
     }()
     
-    lazy private var scheduleButton: NewHabbitMenuElement = {
-        let view = NewHabbitMenuElement(with: "Расписание", divider: false)
+    lazy private var scheduleButton: NewHabitMenuElement = {
+        let view = NewHabitMenuElement(with: "Расписание", divider: false)
         view.translatesAutoresizingMaskIntoConstraints = false
         view.addTarget(self, action: #selector(handleScheduleButtonTapped), for: .touchUpInside)
         return view
@@ -112,6 +121,14 @@ final class NewHabbitViewController: UIViewController {
         return stackView
     }()
     
+    private lazy var collectionView: UICollectionView = {
+        let collectionViewLayout = UICollectionViewFlowLayout()
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: collectionViewLayout)
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        collectionView.backgroundColor = .ypWhite
+        return collectionView
+    }()
+    
     // MARK: - LifeCycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -121,6 +138,7 @@ final class NewHabbitViewController: UIViewController {
         setupNavigation()
         
         trackerNameTextField.setDelegate(self)
+        setupCollectionView()
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -134,7 +152,7 @@ final class NewHabbitViewController: UIViewController {
     private func setupView() {
         menuButtonWrapperView.addSubview(menuStackView)
         view.addSubviews(
-            trackerNameTextField, menuButtonWrapperView, buttonsStackView
+            trackerNameTextField, menuButtonWrapperView, buttonsStackView, collectionView
         )
     }
     
@@ -142,19 +160,39 @@ final class NewHabbitViewController: UIViewController {
         title = "Новая привычка"
         navigationItem.hidesBackButton = true
     }
+    
+    private func setupCollectionView() {
+        collectionView.dataSource = self
+        collectionView.delegate = self
+        collectionView.allowsMultipleSelection = true
+        collectionView
+            .register(EmojiCollectionCell.self,
+                forCellWithReuseIdentifier: "emojiCell"
+            )
+        collectionView
+            .register(ColorCollectionCell.self,
+                forCellWithReuseIdentifier: "colorCell"
+            )
+        collectionView
+            .register(
+                CollectionHeaderView.self,
+                forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
+                withReuseIdentifier: "header"
+            )
+    }
 }
 
 // MARK: - UITextFieldDelegate
 
-extension NewHabbitViewController: UITextFieldDelegate {
+extension NewHabitViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
     }
 }
 
-// MARK: - NewHabbitViewController Constraints
+// MARK: - NewHabitViewController Constraints
 
-extension NewHabbitViewController {
+extension NewHabitViewController {
     private func setupConstraints() {
         setupTrackerNameTextFieldConstraints()
         setupMenuButtonWrapperViewConstraints()
@@ -162,6 +200,7 @@ extension NewHabbitViewController {
         setupCategoryButtonConstraints()
         setupScheduleButtonConstraints()
         setupButtonsStackViewConstraints()
+        setupCollectionViewConstraints()
     }
     
     private func setupTrackerNameTextFieldConstraints() {
@@ -219,14 +258,24 @@ extension NewHabbitViewController {
                     constant: -16
                 ),
             buttonsStackView.heightAnchor.constraint(equalToConstant: 60)
-        ]
-)
+        ])
+    }
+    
+    private func setupCollectionViewConstraints() {
+        NSLayoutConstraint.activate([
+            collectionView.topAnchor
+                .constraint(equalTo: menuStackView.bottomAnchor, constant: 32),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            collectionView.bottomAnchor
+                .constraint(equalTo: buttonsStackView.topAnchor, constant: -16)
+        ])
     }
 }
 
-// MARK: - NewHabbitViewController Handlers
+// MARK: - NewHabitViewController Handlers
 
-extension NewHabbitViewController {
+extension NewHabitViewController {
     
     @objc private func textFieldDidChange(sender: UITextField) {
         guard
@@ -263,16 +312,173 @@ extension NewHabbitViewController {
 
 // MARK: - ScheduleViewControllerDelegate
 
-extension NewHabbitViewController: ScheduleViewControllerDelegate {
+extension NewHabitViewController: ScheduleViewControllerDelegate {
     func scheduleChanged(_ schedule: [DayOfWeek]) {
         guard let presenter else { return }
         presenter.scheduleChanged(schedule)
     } 
 }
 
-// MARK: - NewHabbitViewControllerProtocol
+// MARK: - UICollectionViewDataSource
+extension NewHabitViewController: UICollectionViewDataSource {
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        return 2
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return section == 0 ? emojis.count : CardColor.allCases.count
+    }
 
-extension NewHabbitViewController: NewHabbitViewControllerProtocol {
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        switch indexPath.section {
+        case 0:
+            return emojiCell(for: indexPath)
+        case 1:
+            return colorCell(for: indexPath)
+        default:
+            return UICollectionViewCell()
+        }
+    }
+    
+    private func emojiCell(for indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: "emojiCell",
+            for: indexPath
+        ) as? EmojiCollectionCell else {
+            return UICollectionViewCell()
+        }
+        
+        cell.configure(with: emojis[indexPath.item])
+        
+        
+        return cell
+    }
+    
+    private func colorCell(for indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: "colorCell",
+            for: indexPath
+        ) as? ColorCollectionCell else {
+            return UICollectionViewCell()
+        }
+        
+        let color = UIColor.fromCardColor(CardColor.allCases[indexPath.item])
+        cell.configure(with: color)
+    
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        guard let headerView = collectionView.dequeueReusableSupplementaryView(
+            ofKind: kind,
+            withReuseIdentifier: "header",
+            for: indexPath
+        ) as? CollectionHeaderView else {
+            return UICollectionReusableView()
+        }
+        
+        headerView.configure(with: headers[indexPath.section])
+        
+        return headerView
+    }
+    
+    func collectionView(
+        _ collectionView: UICollectionView,
+        didSelectItemAt indexPath: IndexPath
+    ) {
+        guard let cell = collectionView.cellForItem(at: indexPath) else { return }
+        
+        setCellSelection(cell, indexPath: indexPath, isSelected: true)
+    }
+    
+    func collectionView(
+        _ collectionView: UICollectionView,
+        didDeselectItemAt indexPath: IndexPath
+    ) {
+        guard let cell = collectionView.cellForItem(at: indexPath) else { return }
+        setCellSelection(cell, indexPath: indexPath, isSelected: false)
+    }
+    
+    private func setCellSelection(_ cell: UICollectionViewCell, indexPath: IndexPath, isSelected: Bool) {
+        guard let cellState = cell as? CollectionViewCellStateProtocol else { return }
+        
+        switch isSelected {
+            case true:
+            cellState.activState()
+                collectionView.indexPathsForSelectedItems?
+                    .filter { $0.section == indexPath.section && $0 != indexPath }
+                    .forEach {
+                        collectionView.deselectItem(at: $0, animated: false)
+                        if let oldCell = collectionView.cellForItem(at: $0) {
+                            setCellSelection(oldCell, indexPath: $0, isSelected: false)
+                        }
+                    }
+            case false:
+                cellState.inactiveState()
+                collectionView.deselectItem(at: indexPath, animated: false)
+        }
+        
+        switch indexPath.section {
+            case 0: setEmojiCellSelection(cell, indexPath: indexPath, isSelected: isSelected)
+            case 1: setColorCellSelection(cell, indexPath: indexPath, isSelected: isSelected)
+            default : break
+        }
+    }
+    
+    private func setEmojiCellSelection(_ cell: UICollectionViewCell, indexPath: IndexPath, isSelected: Bool) {
+        guard let emojiCell = cell as? EmojiCollectionCell else { return }
+        switch isSelected {
+            case true:
+                presenter?.emojiChanged(emojiCell.getValue())
+            case false:
+                presenter?.emojiChanged(nil)
+        }
+    }
+    
+    private func setColorCellSelection(_ cell: UICollectionViewCell, indexPath: IndexPath, isSelected: Bool) {
+        guard let colorCell = cell as? ColorCollectionCell else { return }
+        switch isSelected {
+            case true:
+                presenter?.colorChanged(colorCell.getValue()?.toCardColor())
+            case false:
+                presenter?.colorChanged(nil)
+        }
+    }
+}
+
+// MARK: - UICollectionViewDelegateFlowLayout
+
+extension NewHabitViewController: UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: 52, height: 52)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+        return UIEdgeInsets(top: 24, left: 16, bottom: 24, right: 16)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
+        return CGFloat(2.5)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        return 0
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
+        let headerView = CollectionHeaderView()
+        headerView.configure(with: headers[section])
+        
+        return headerView.systemLayoutSizeFitting(CGSize(width: collectionView.frame.width, height: UIView.layoutFittingExpandedSize.height),
+          withHorizontalFittingPriority: .required,
+          verticalFittingPriority: .fittingSizeLevel
+        )
+    }
+}
+
+// MARK: - NewHabitViewControllerProtocol
+
+extension NewHabitViewController: NewHabitViewControllerProtocol {
     func showTrackerNameError() {
         trackerNameTextField.showError()
     }
