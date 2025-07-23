@@ -11,7 +11,7 @@ final class TrackerCategoryHeaderView: UICollectionReusableView {
     private enum ViewConstants {
         static let sidesIndent: CGFloat = 28
     }
-    
+
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 19, weight: .bold)

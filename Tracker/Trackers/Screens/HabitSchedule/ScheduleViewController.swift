@@ -132,8 +132,5 @@ extension ScheduleViewController: ScheduleCellDelegate {
         } else {
             selectedDays.remove(day)
         }
-        
     }
-
-    
 }

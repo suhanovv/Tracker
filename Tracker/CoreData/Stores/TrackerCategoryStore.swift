@@ -14,7 +14,9 @@ enum TrackerCategoryStoreError: Error {
 
 protocol TrackerCategoryStoreProtocol {
     func create(_ category: TrackerCategory) throws
+    func update(_ category: TrackerCategory) throws
     func getAll() throws -> [TrackerCategory]
+    func deleteCategory(byId id: UUID) throws
 }
 
 final class TrackerCategoryStore: TrackerCategoryStoreProtocol {
@@ -35,6 +37,19 @@ final class TrackerCategoryStore: TrackerCategoryStoreProtocol {
         try context.save()
     }
     
+    func update(_ category: TrackerCategory) throws {
+        let categoryEntity = try fetchCategoryEntity(for: category.id)
+        categoryEntity.name = category.name
+        
+        try context.save()
+    }
+    
+    func deleteCategory(byId id: UUID) throws {
+        let category = try fetchCategoryEntity(for: id)
+        context.delete(category)
+        try context.save()
+    }
+    
     func getAll() throws -> [TrackerCategory] {
         let fetchRequest = TrackerCategoryEntity.fetchRequest()
         let entities = try context.fetch(fetchRequest)
@@ -45,5 +60,20 @@ final class TrackerCategoryStore: TrackerCategoryStoreProtocol {
             }
             return domain
         }
+    }
+    
+    private func fetchCategoryEntity(for categoryId: UUID) throws -> TrackerCategoryEntity {
+        let request = TrackerCategoryEntity.fetchRequest()
+        request.predicate = NSPredicate(
+            format: "%K == %@",
+            #keyPath(TrackerCategoryEntity.categoryId),
+            categoryId as NSUUID
+        )
+        request.fetchLimit = 1
+
+        guard let entity = try context.fetch(request).first else {
+            throw TrackerCategoryStoreError.decodingErrorInvalidCategory
+        }
+        return entity
     }
 }

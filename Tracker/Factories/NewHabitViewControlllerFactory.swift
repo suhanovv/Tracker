@@ -9,9 +9,10 @@ import UIKit
 
 final class NewHabitViewControlllerFactory: ViewControllerFactoryProtocol {
     func make() -> UIViewController {
-        let vc = NewHabitViewController()
-        let presenter = NewHabitViewPresenter(view: vc)
-        vc.presenter = presenter
+        let trackerStore = TrackerStore()
+        let trackerCategoryStore = TrackerCategoryStore()
+        let viewModel = NewHabitViewModel(trackerStore: trackerStore, categoryStore: trackerCategoryStore)
+        let vc = NewHabitViewController(viewModel: viewModel)
         return vc
     }
 }

@@ -7,8 +7,8 @@
 
 import UIKit
 
-final class TrackerNameTextFieldView: UIView {
-    lazy private var trackerNameTextField: UITextField = {
+final class TextFieldWithErrorView: UIView {
+    lazy private var textField: UITextField = {
         let textField = UITextField()
         textField.clearButtonMode = .whileEditing
         textField.translatesAutoresizingMaskIntoConstraints = false
@@ -31,7 +31,6 @@ final class TrackerNameTextFieldView: UIView {
         label.font = .systemFont(ofSize: 17, weight: .regular)
         label.translatesAutoresizingMaskIntoConstraints = false
         label.textAlignment = .center
-        label.text = "Ограничение 38 символов"
         label.isHidden = true
         
         return label
@@ -48,7 +47,7 @@ final class TrackerNameTextFieldView: UIView {
 
     init(placeholder: String) {
         super.init(frame: .zero)
-        trackerNameTextField.placeholder = placeholder
+        textField.placeholder = placeholder
         
         setupView()
         setupConstraints()
@@ -59,15 +58,15 @@ final class TrackerNameTextFieldView: UIView {
     }
     
     private func setupView() {
-        textFieldWrapperView.addSubview(trackerNameTextField)
+        textFieldWrapperView.addSubview(textField)
         addSubview(stackView)
     }
 }
 
-extension TrackerNameTextFieldView {
+extension TextFieldWithErrorView {
     private func setupConstraints() {
         setupTextFieldWrapperViewConstraints()
-        setupTrackerNameTextFieldConstraints()
+        setupTextFieldConstraints()
         setupStackViewConstraints()
         setupErrorLabelConstraints()
     }
@@ -87,12 +86,12 @@ extension TrackerNameTextFieldView {
         ])
     }
     
-    private func setupTrackerNameTextFieldConstraints() {
+    private func setupTextFieldConstraints() {
         NSLayoutConstraint.activate([
-            trackerNameTextField.topAnchor.constraint(equalTo: textFieldWrapperView.topAnchor),
-            trackerNameTextField.leadingAnchor.constraint(equalTo: textFieldWrapperView.leadingAnchor, constant: 16),
-            trackerNameTextField.trailingAnchor.constraint(equalTo: textFieldWrapperView.trailingAnchor, constant: -12),
-            trackerNameTextField.bottomAnchor.constraint(equalTo: textFieldWrapperView.bottomAnchor),
+            textField.topAnchor.constraint(equalTo: textFieldWrapperView.topAnchor),
+            textField.leadingAnchor.constraint(equalTo: textFieldWrapperView.leadingAnchor, constant: 16),
+            textField.trailingAnchor.constraint(equalTo: textFieldWrapperView.trailingAnchor, constant: -12),
+            textField.bottomAnchor.constraint(equalTo: textFieldWrapperView.bottomAnchor),
         ])
     }
     
@@ -103,20 +102,27 @@ extension TrackerNameTextFieldView {
     }
 }
 
-extension TrackerNameTextFieldView {
+extension TextFieldWithErrorView {
     func setDelegate(_ delegate: UITextFieldDelegate) {
-        trackerNameTextField.delegate = delegate
+        textField.delegate = delegate
     }
     
     func addTarget(_ target: Any?, action: Selector, for controlEvents: UIControl.Event) {
-        trackerNameTextField.addTarget(target, action: action, for: controlEvents)
+        textField.addTarget(target, action: action, for: controlEvents)
     }
     
-    func showError() {
+    func showError(_ error: String?) {
+        if let error = error {
+            errorLabel.text = error
+        }
         errorLabel.isHidden = false
     }
     
     func hideError() {
         errorLabel.isHidden = true
+    }
+    
+    func setText(_ text: String?) {
+        textField.text = text
     }
 }

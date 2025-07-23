@@ -3,7 +3,7 @@
     <entity name="TrackerCategoryEntity" representedClassName="TrackerCategoryEntity" syncable="YES" codeGenerationType="class">
         <attribute name="categoryId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" attributeType="String"/>
-        <relationship name="trackers" optional="YES" toMany="YES" deletionRule="Deny" destinationEntity="TrackerEntity" inverseName="category" inverseEntity="TrackerEntity"/>
+        <relationship name="trackers" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="TrackerEntity" inverseName="category" inverseEntity="TrackerEntity"/>
     </entity>
     <entity name="TrackerEntity" representedClassName="TrackerEntity" syncable="YES" codeGenerationType="class">
         <attribute name="color" attributeType="String" valueTransformerName="ColorValueTransformer"/>

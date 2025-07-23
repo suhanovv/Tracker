@@ -18,19 +18,33 @@ protocol TrackerCardDelegateProtocol: AnyObject {
 
 final class TrackerCard: UICollectionViewCell {
     
-    weak var delegate: TrackerCardDelegateProtocol?
+    var viewModel: TrackerCardViewModelProtocol? {
+        didSet {
+            nameLabel.text = viewModel?.trackerName
+            daysLabel.text = viewModel?.daysCountString
+            emojiLabel.text = viewModel?.emoji
+            plusButton.isEnabled = viewModel?.isActive ?? false
+            updateButtonState(isChecked: viewModel?.isCompleted ?? false)
+            
+            if let color = viewModel?.cardColor {
+                quantityView.backgroundColor = UIColor.fromCardColor(color)
+            }
+            
+            viewModel?.dayCountStringBinding = { [weak self] value in
+                self?.daysLabel.text = value
+            }
+            
+            viewModel?.isCompletedBinding = { [weak self] isCompleted in
+                self?.updateButtonState(isChecked: isCompleted)
+            }
+        }
+    }
     
     private enum ViewConstants {
         static let sidesIndent: CGFloat = 12
         static let emojiSize: CGFloat = 24
         static let plusButtonSize: CGFloat = 32
     }
-    
-    // MARK: - Properties
-    private var tracker: Tracker?
-    private var checkedDaysCount: Int = 0
-    private var isChecked: Bool = false
-    private var isActive: Bool = true
     
     // MARK: - View Elements
     lazy private var cardStackView: UIStackView = {
@@ -54,7 +68,6 @@ final class TrackerCard: UICollectionViewCell {
         let label = UILabel()
         label.textColor = .white
         label.font = .systemFont(ofSize: 14, weight: .medium)
-        label.text = "😻"
         label.textAlignment = .center
         label.backgroundColor = .emojiBackground
         label.layer.cornerRadius = ViewConstants.emojiSize / 2
@@ -68,10 +81,8 @@ final class TrackerCard: UICollectionViewCell {
         let label = BottomAlignedLabel()
         label.textColor = .white
         label.textAlignment = .left
-        
         label.numberOfLines = 2
         label.font = .systemFont(ofSize: 12, weight: .medium)
-        label.text = "Кошка заслонила камеру на созвоне"
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -88,7 +99,6 @@ final class TrackerCard: UICollectionViewCell {
         label.textAlignment = .left
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "12 дней"
         return label
     }()
     
@@ -99,7 +109,6 @@ final class TrackerCard: UICollectionViewCell {
         button.layer.cornerRadius = ViewConstants.plusButtonSize / 2
         button.clipsToBounds = true
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.isEnabled = isActive
         button.addTarget(self, action: #selector(handlePlusButtonTapped), for: .touchUpInside)
         
         return button
@@ -118,27 +127,18 @@ final class TrackerCard: UICollectionViewCell {
     }
     
     @objc private func handlePlusButtonTapped() {
-        guard
-            let tracker,
-            let delegate
-        else { return }
-        
-        switch isChecked {
-        case true:
-            delegate.didUncheckTracker(tracker)
-        case false:
-            delegate.didCheckTracker(tracker)
+        viewModel?.toggleComplete()
+    }
+    
+    private func updateButtonState(isChecked: Bool) {
+        guard let color = viewModel?.cardColor else { return }
+        if isChecked {
+            plusButton.backgroundColor = UIColor.fromCardColor(color).withAlphaComponent(0.3)
+            plusButton.setImage(UIImage(systemName: "checkmark"), for: .normal)
+        } else {
+            plusButton.backgroundColor = UIColor.fromCardColor(color).withAlphaComponent(1)
+            plusButton.setImage(UIImage(systemName: "plus"), for: .normal)
         }
-    }
-    
-    private func uncheckedButtonState(_ tracker: Tracker) {
-        plusButton.backgroundColor = UIColor.fromCardColor(tracker.color).withAlphaComponent(1)
-        plusButton.setImage(UIImage(systemName: "plus"), for: .normal)
-    }
-    
-    private func checkedButtonState(_ tracker: Tracker) {
-        plusButton.backgroundColor = UIColor.fromCardColor(tracker.color).withAlphaComponent(0.3)
-        plusButton.setImage(UIImage(systemName: "checkmark"), for: .normal)
     }
 }
  
@@ -185,14 +185,12 @@ extension TrackerCard {
     }
     
     private func setupEmojiViewConstraint() {
-        NSLayoutConstraint.activate(
-[
+        NSLayoutConstraint.activate([
             emojiLabel.leadingAnchor.constraint(equalTo: quantityView.leadingAnchor, constant: ViewConstants.sidesIndent),
             emojiLabel.topAnchor.constraint(equalTo: quantityView.topAnchor, constant: ViewConstants.sidesIndent),
             emojiLabel.widthAnchor.constraint(equalToConstant: ViewConstants.emojiSize),
             emojiLabel.heightAnchor.constraint(equalTo: emojiLabel.widthAnchor, multiplier: 1),
-        ]
-)
+        ])
     }
     
     private func setupNameLabelConstraint() {
@@ -220,25 +218,5 @@ extension TrackerCard {
             plusButton.topAnchor.constraint(equalTo: trackerView.topAnchor, constant: 8)
             
         ])
-    }
-}
-
-// MARK: - TrackerCard data population
-extension TrackerCard {
-    
-    func configure(tracker: Tracker, isChecked: Bool, isActive: Bool = true) {
-        self.tracker = tracker
-        self.isChecked = isChecked
-        daysLabel.text = String.pluralize(days: tracker.countChecks)
-        emojiLabel.text = tracker.emoji
-        nameLabel.text = tracker.name
-        quantityView.backgroundColor = UIColor.fromCardColor(tracker.color)
-        plusButton.isEnabled = isActive
-        if isChecked {
-            checkedButtonState(tracker)
-        } else {
-            uncheckedButtonState(tracker)
-        }
-        
     }
 }

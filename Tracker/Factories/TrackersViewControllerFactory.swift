@@ -9,23 +9,14 @@ import UIKit
 
 final class TrackersViewControllerFactory: ViewControllerFactoryProtocol {
     func make() -> UIViewController {
-        let defaultDate = Calendar.current.startOfDay(for: Date())
-        let filter = makeDefaultFilter(for: defaultDate)
         let trackerRecordStore = TrackerRecordStore()
-
-        guard let dataProvider = try? TrackerDataProvider(
-            trackerRecordStore: trackerRecordStore,
-            filter: filter
-        ) else {
-            assertionFailure("❌ Failed to create TrackerDataProvider")
-            return UIViewController()
-        }
-
-        let viewController = TrackersViewController(
-            trackerDataProvider: dataProvider,
-            currentDate: defaultDate
+        let dataProvider = TrackerDataProvider()
+        let viewModel = TrackersViewModel(
+            dataProvider: dataProvider,
+            recordStore: trackerRecordStore
         )
-        dataProvider.delegate = viewController
+        dataProvider.delegate = viewModel
+        let viewController = TrackersViewController(viewModel: viewModel)
         return viewController
     }
 
