@@ -12,6 +12,7 @@ import CoreData
 // MARK: - TrackerDataProviderDelegate
 protocol TrackerDataProviderDelegate: AnyObject {
     func didUpdate(_ update: TrackerStoreUpdate)
+    func didCategoriesChange()
 }
 
 // MARK: - TrackerDataProviderProtocol
@@ -21,9 +22,7 @@ protocol TrackerDataProviderProtocol {
     func numberOfItemsInSection(_ section: Int) -> Int
     func sectionName(at: Int) -> String?
     func trackerAt(_ index: IndexPath) -> Tracker?
-    func isExist(_ record: TrackerRecord) -> Bool
-    func createTrackerRecord(_ record: TrackerRecord)
-    func removeTrackerRecord(_ record: TrackerRecord)
+
     func updateFilter(_ filter: TrackerFilter)
 }
 
@@ -31,8 +30,8 @@ protocol TrackerDataProviderProtocol {
 final class TrackerDataProvider: NSObject {
     weak var delegate: TrackerDataProviderDelegate?
     
-    private let trackerRecordStore: TrackerRecordStoreProtocol
     private var fetchedResultsController: NSFetchedResultsController<TrackerEntity>?
+    private var categoryChangeObserver: NSObjectProtocol?
     
     private var insertedIndexes: Set<IndexPath>?
     private var deletedIndexes: Set<IndexPath>?
@@ -43,24 +42,47 @@ final class TrackerDataProvider: NSObject {
     private var deletedSections: IndexSet?
     
     
-    init(trackerRecordStore: TrackerRecordStoreProtocol, filter: TrackerFilter) throws {
-        self.trackerRecordStore = trackerRecordStore
+    override init() {
         super.init()
-        setupFetchedResultsController(filter: filter)
+        setupFetchedResultsController()
+        
     }
     
-    private func setupFetchedResultsController(filter: TrackerFilter) {
+    private func setupCategoryChangeObserver() {
+        categoryChangeObserver = NotificationCenter.default
+            .addObserver(
+                forName: .NSManagedObjectContextObjectsDidChange,
+                object: ManagedContext.shared.viewContext,
+                queue: .main,
+                using: contextDidChange
+            )
+    }
+    
+    @objc private func contextDidChange(_ notification: Notification) {
+        guard let updatedObjects = notification.userInfo?[NSUpdatedObjectsKey] as? Set<NSManagedObject> else { return }
+                
+        let categoryChanged = updatedObjects.contains { object in
+            return object is TrackerCategoryEntity && object.changedValues().keys.contains("name")
+        }
+        if categoryChanged {
+            try? fetchedResultsController?.performFetch()
+            delegate?.didCategoriesChange()
+        }
+        
+    }
+    
+    private func setupFetchedResultsController() {
         let fetchRequest = TrackerEntity.fetchRequest()
-        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
-        fetchRequest.predicate = makeFilterPredicate(filter: filter)
-
+        fetchRequest.sortDescriptors = [
+            NSSortDescriptor(key: #keyPath(TrackerEntity.category.name), ascending: true),
+            NSSortDescriptor(key: #keyPath(TrackerEntity.name), ascending: true)
+        ]
         fetchedResultsController = NSFetchedResultsController(
            fetchRequest: fetchRequest,
            managedObjectContext: ManagedContext.shared.viewContext,
            sectionNameKeyPath: "category.name",
            cacheName: nil)
         fetchedResultsController?.delegate = self
-        try? fetchedResultsController?.performFetch()
     }
     
     private func makeFilterPredicate(filter: TrackerFilter) -> NSPredicate {
@@ -69,7 +91,7 @@ final class TrackerDataProvider: NSObject {
                 format: "%K CONTAINS[c] %@",
                 #keyPath(TrackerEntity.schedule), filter.dayOfWeek.rawValue)
         ]
-        if let name = filter.name {
+        if let name = filter.name, !name.isEmpty{
             predicates.append(
                 NSPredicate(
                     format: "%K CONTAINS[c] %@",
@@ -176,18 +198,6 @@ extension TrackerDataProvider: TrackerDataProviderProtocol {
     
     func trackerAt(_ index: IndexPath) -> Tracker? {
         fetchedResultsController?.object(at: index).toDomainModel()
-    }
-    
-    func createTrackerRecord(_ record: TrackerRecord) {
-        try? trackerRecordStore.create(record)
-    }
-    
-    func removeTrackerRecord(_ record: TrackerRecord) {
-        try? trackerRecordStore.remove(record)
-    }
-    
-    func isExist(_ record: TrackerRecord) -> Bool {
-        return trackerRecordStore.isExist(record)
     }
     
     func updateFilter(_ filter: TrackerFilter) {

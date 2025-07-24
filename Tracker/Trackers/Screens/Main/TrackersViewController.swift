@@ -19,19 +19,44 @@ final class TrackersViewController: UIViewController {
 
     // MARK: - Properties
     
-    private var currentDate: Date = Constants.defaultDate
-    private var currentSearchText: String?
-    private var trackerDataProvider: TrackerDataProviderProtocol
+    private var viewModel: TrackersViewModelProtocol
     
-    init(trackerDataProvider: TrackerDataProviderProtocol, currentDate: Date, currentSearchText: String? = nil) {
-        self.currentDate = currentDate
-        self.currentSearchText = currentSearchText
-        self.trackerDataProvider = trackerDataProvider
+    init(viewModel: TrackersViewModelProtocol) {
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
+        bind()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func bind() {
+        viewModel.selectedDateBinding = {[weak self] _ in
+            self?.collectionView.reloadData()
+            self?.updateEmptyLogoVisibility()
+        }
+        viewModel.searchTextBinding = {[weak self] _ in
+            self?.collectionView.reloadData()
+            self?.updateEmptyLogoVisibility()
+        }
+        viewModel.trackersChangedBinding = { [weak self] update in
+            guard let self else { return }
+            
+            self.collectionView.performBatchUpdates {
+                self.collectionView.insertSections(update.insertedSections)
+                self.collectionView.deleteSections(update.deletedSections)
+                self.collectionView.insertItems(at: Array(update.insertedIndexes))
+                self.collectionView.deleteItems(at: Array(update.deletedIndexes))
+                self.collectionView.reloadItems(at: Array(update.updatedIndexes))
+
+            }
+            self.updateEmptyLogoVisibility()
+        }
+        viewModel.categoriesChangedBinding = { [weak self] in
+            self?.collectionView.reloadData()
+            self?.updateEmptyLogoVisibility()
+        }
     }
     
     // MARK: - UI elements
@@ -88,31 +113,11 @@ final class TrackersViewController: UIViewController {
     }
     
     @objc func datePickerValueChanged(_ sender: UIDatePicker) {
-        currentDate = Calendar.current.startOfDay(for: sender.date)
-        filterDidChange()
+        viewModel.changeDate(Calendar.current.startOfDay(for: sender.date))
     }
     
     @objc func searchBarTextDidChange(_ sender: UISearchTextField) {
-        if let text = sender.text, !text.isEmpty {
-            currentSearchText = text
-        } else {
-            currentSearchText = nil
-        }
-        filterDidChange()
-    }
-    
-    private func filterDidChange() {
-        if let currentSearchText {
-            trackerDataProvider.updateFilter(
-                .init(dayOfWeek: DayOfWeek.dayOfWeekFromDate(currentDate), name: currentSearchText)
-            )
-        } else {
-            trackerDataProvider.updateFilter(
-                .init(dayOfWeek: DayOfWeek.dayOfWeekFromDate(currentDate))
-            )
-        }
-        collectionView.reloadData()
-        updateCategories()
+        viewModel.changeSearchText(sender.text ?? "")
     }
     
     // MARK: - LifeCycle
@@ -127,8 +132,8 @@ final class TrackersViewController: UIViewController {
         setupEmptyTrackersLogo()
     }
 
-    private func updateCategories() {
-        if collectionView.numberOfSections == 0 {
+    private func updateEmptyLogoVisibility() {
+        if viewModel.numberOfSections == 0 {
             emptyTrackersLogo.show()
         } else {
             emptyTrackersLogo.hide()
@@ -140,38 +145,23 @@ final class TrackersViewController: UIViewController {
 
 extension TrackersViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        trackerDataProvider.numberOfItemsInSection(section)
+        viewModel.numberOfItemsInSection(section)
     }
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        trackerDataProvider.numberOfSections
-
+        viewModel.numberOfSections
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(
-            withReuseIdentifier: "trackerCell",
-            for: indexPath
-        ) as? TrackerCard else {
-            return UICollectionViewCell()
-        }
+        guard
+            let cell = collectionView.dequeueReusableCell(
+                withReuseIdentifier: "trackerCell",
+                for: indexPath) as? TrackerCard,
+            let trackerViewModel = viewModel.trackerAt(indexPath)
+        else { return UICollectionViewCell()}
+        
+        cell.viewModel = trackerViewModel
 
-        cell.delegate = self
-        
-        return configureCell(cell, for: indexPath)
-    }
-    
-    private func configureCell(_ cell: TrackerCard, for indexPath: IndexPath) -> TrackerCard {
-        guard let tracker = trackerDataProvider.trackerAt(indexPath) else {
-            return cell
-        }
-        
-        let isChecked = trackerDataProvider.isExist(
-            TrackerRecord(date: currentDate, trackerId: tracker.id)
-        )
-        
-        let isActive = Date() >= currentDate
-        cell.configure(tracker: tracker, isChecked: isChecked, isActive: isActive)
         return cell
     }
 }
@@ -211,7 +201,7 @@ extension TrackersViewController: UICollectionViewDelegateFlowLayout {
             return UICollectionReusableView()
         }
         
-        if let categoryName = trackerDataProvider.sectionName(at: indexPath.section) {
+        if let categoryName = viewModel.sectionNameAt(indexPath.section) {
             headerView.configure(with: categoryName)
         }
         
@@ -240,7 +230,6 @@ extension TrackersViewController {
         view.addSubviews(collectionView, emptyTrackersLogo, searchBar)
     }
     
-    
     private func setupNavigationBar() {
         setupNavigationLeftButton()
         setupNavigationTitle()
@@ -260,7 +249,6 @@ extension TrackersViewController {
     private func setupNavigationLeftButton() {
         let image = UIImage(systemName: "plus", withConfiguration: UIImage.SymbolConfiguration(weight: .bold))
         
-    
         navigationItem.leftBarButtonItem = UIBarButtonItem(image: image, style: .plain, target: self, action: #selector(addButtonTapped))
     }
     
@@ -272,7 +260,6 @@ extension TrackersViewController {
     
     private func setupSearchBar() {
         setupSearchBarConstraints()
-        
     }
     
     private func setupCollectionView() {
@@ -301,15 +288,12 @@ extension TrackersViewController {
     }
     
     private func setupSearchBarConstraints() {
-        NSLayoutConstraint.activate(
-[
+        NSLayoutConstraint.activate([
             searchBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             searchBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: ViewConstants.sidesIndent),
             searchBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -ViewConstants.sidesIndent),
             searchBar.heightAnchor.constraint(equalToConstant: 36)
-            
-        ]
-)
+        ])
     }
     
     private func setupCollectionViewConstraints() {
@@ -329,30 +313,6 @@ extension TrackersViewController {
             emptyTrackersLogo.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -ViewConstants.sidesIndent),
         ])
     }
-    
-    private func updateEmptyLogoVisibility() {
-        if trackerDataProvider.numberOfTrackers > 0 {
-            emptyTrackersLogo.hide()
-        } else {
-            emptyTrackersLogo.show()
-        }
-    }
-}
-
-// MARK: - TrackerCardDelegateProtocol
-
-extension TrackersViewController: TrackerCardDelegateProtocol {
-    func didCheckTracker(_ tracker: Tracker) {
-        let record = TrackerRecord(date: currentDate, trackerId: tracker.id)
-        trackerDataProvider.createTrackerRecord(record)
-    }
-
-    func didUncheckTracker(_ tracker: Tracker) {
-        let record = TrackerRecord(date: currentDate, trackerId: tracker.id)
-        trackerDataProvider.removeTrackerRecord(record)
-    }
-
-    
 }
 
 // MARK: - UISearchTextFieldDelegate
@@ -360,20 +320,5 @@ extension TrackersViewController: TrackerCardDelegateProtocol {
 extension TrackersViewController: UISearchTextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
-    }
-}
-
-extension TrackersViewController: TrackerDataProviderDelegate {
-    func didUpdate(_ update: TrackerStoreUpdate) {
-        
-        collectionView.performBatchUpdates {
-            collectionView.insertSections(update.insertedSections)
-            collectionView.deleteSections(update.deletedSections)
-            collectionView.insertItems(at: Array(update.insertedIndexes))
-            collectionView.deleteItems(at: Array(update.deletedIndexes))
-            collectionView.reloadItems(at: Array(update.updatedIndexes))
-
-        }
-        updateCategories()
     }
 }

@@ -108,5 +108,4 @@ final class ScheduleCell: UIView {
     @objc private func toggleCheckbox() {
         delegate?.scheduleDidChangeValue(day, isOn: checkbox.isOn)
     }
-    
 }

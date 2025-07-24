@@ -22,6 +22,7 @@ final class TrackerStore: TrackerStoreProtocol {
     init(context: NSManagedObjectContext) {
         self.context = context
     }
+    
     func create(_ tracker: Tracker, in category: TrackerCategory) throws {
         let trackerEntity = TrackerEntity(context: context)
         trackerEntity.trackerId = tracker.id
@@ -49,6 +50,4 @@ final class TrackerStore: TrackerStoreProtocol {
         }
         return entity
     }
-    
 }
-

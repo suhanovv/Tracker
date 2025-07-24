@@ -7,17 +7,6 @@
 
 import UIKit
 
-// MARK: - NewHabitViewControllerProtocol
-
-protocol NewHabitViewControllerProtocol: AnyObject {
-    func showTrackerNameError()
-    func hideTrackerNameError()
-    func deactivateCreateButton()
-    func activateCreateButton()
-    func updateSelectedCategoryCaption(_ caption: String)
-    func updateSelectedScheduleButtonCaption(_ caption: String)
-}
-
 
 // MARK: - NewHabitViewController
 
@@ -27,23 +16,20 @@ final class NewHabitViewController: UIViewController {
         static let lementsHeight: CGFloat = 24
         static let activeCreateButtonColor: UIColor = .ypBlack
         static let inactiveCreateButtonColor: UIColor = .ypGrey
-        
     }
     
-    var presenter: NewHabitViewPresenterProtocol?
+    private var viewModel: NewHabitViewModelProtocol
     private let emojis: [String] = [
         "🙂", "😻", "🌺", "🐶", "❤️", "😱",
         "😇", "😡", "🥶", "🤔", "🙌", "🍔",
         "🥦", "🏓", "🥇", "🎸", "🏝", "😪"
     ]
     
-    
     private let headers: [String] = ["Emoji", "Цвет"]
     
-    
     // MARK: - UI Elements
-    lazy private var trackerNameTextField: TrackerNameTextFieldView = {
-       let view = TrackerNameTextFieldView(placeholder: "Введите название трекера")
+    lazy private var trackerNameTextField: TextFieldWithErrorView = {
+       let view = TextFieldWithErrorView(placeholder: "Введите название трекера")
         view.translatesAutoresizingMaskIntoConstraints = false
         view.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
         return view
@@ -68,7 +54,7 @@ final class NewHabitViewController: UIViewController {
     }()
     
     lazy private var categoryButton: NewHabitMenuElement = {
-        let subTitle = presenter?.getSelectedCategory()?.name
+        let subTitle = viewModel.category?.name
         let view = NewHabitMenuElement(with: "Категория", subTitle: subTitle, divider: true)
         view.translatesAutoresizingMaskIntoConstraints = false
         view.addTarget(self, action: #selector(handleCategoryButtonTapped), for: .touchUpInside)
@@ -104,8 +90,6 @@ final class NewHabitViewController: UIViewController {
         button.setTitleColor(.ypWhite, for: .normal)
         button.layer.cornerRadius = Constants.cornerRadius
         button.layer.masksToBounds = true
-        button.backgroundColor = ViewConstants.inactiveCreateButtonColor
-        button.isEnabled = false
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(handleCreateButtonTapped), for: .touchUpInside)
         
@@ -130,6 +114,40 @@ final class NewHabitViewController: UIViewController {
     }()
     
     // MARK: - LifeCycle
+    
+    init(viewModel: NewHabitViewModelProtocol) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+        self.bind()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func bind() {
+        viewModel.trackerNameErrorBinding = { [weak self] error in
+            guard let textField = self?.trackerNameTextField else { return }
+            error == nil ? textField.hideError() : textField.showError(error)
+        }
+        
+        viewModel.scheduleCaptionBinding = { [weak self] caption in
+            self?.scheduleButton.setSubLabel(subLabel: caption)
+        }
+        
+        viewModel.categoryBinding = { [weak self] category in
+            guard
+                let self,
+                let category = category
+            else { return }
+            self.categoryButton.setSubLabel(subLabel: category.name)
+        }
+        
+        viewModel.isFormValidBinding = { [weak self] isValid in
+            isValid ? self?.createButtonActiveState(): self?.createButtonInactiveState()
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupAppearance()
@@ -154,6 +172,7 @@ final class NewHabitViewController: UIViewController {
         view.addSubviews(
             trackerNameTextField, menuButtonWrapperView, buttonsStackView, collectionView
         )
+        viewModel.isFormValid ? createButtonActiveState(): createButtonInactiveState()
     }
     
     private func setupNavigation() {
@@ -278,21 +297,23 @@ extension NewHabitViewController {
 extension NewHabitViewController {
     
     @objc private func textFieldDidChange(sender: UITextField) {
-        guard
-            let name = sender.text,
-            let presenter
-        else { return }
-        presenter.trackerNameChanged(name)
+        guard let name = sender.text else { return }
+        viewModel.trackerNameChanged(name)
     }
     
     @objc private func handleCategoryButtonTapped(_ sender: Any) {
-        // TODO: Заглушка под реализацию в следующих спринтах
-        print(sender)
+        
+        let categoryViewModel = CategoriesViewModel(selectedCategoryId: viewModel.category?.id)
+        let vc = CategoryViewController(viewModel: categoryViewModel)
+        
+        vc.delegate = self
+        
+        navigationController?.pushViewController(vc, animated: true)
     }
     
     @objc private func handleScheduleButtonTapped(_ sender: Any) {
-        guard let presenter else { return }
-        let vc = ScheduleViewController(selectedDays: presenter.getSelectedSchedule())
+        
+        let vc = ScheduleViewController(selectedDays: viewModel.schedule)
         vc.delegate = self
         navigationController?.pushViewController(vc, animated: true)
     }
@@ -302,8 +323,7 @@ extension NewHabitViewController {
     }
     
     @objc private func handleCreateButtonTapped() {
-        guard let presenter else { return }
-        presenter.createNewTracker { [weak self] in
+        viewModel.createNewTracker { [weak self] in
             guard let self else { return }
             self.dismiss(animated: true)
         }
@@ -314,9 +334,8 @@ extension NewHabitViewController {
 
 extension NewHabitViewController: ScheduleViewControllerDelegate {
     func scheduleChanged(_ schedule: [DayOfWeek]) {
-        guard let presenter else { return }
-        presenter.scheduleChanged(schedule)
-    } 
+        viewModel.scheduleChanged(schedule)
+    }
 }
 
 // MARK: - UICollectionViewDataSource
@@ -429,9 +448,9 @@ extension NewHabitViewController: UICollectionViewDataSource {
         guard let emojiCell = cell as? EmojiCollectionCell else { return }
         switch isSelected {
             case true:
-                presenter?.emojiChanged(emojiCell.getValue())
+                viewModel.emojiChanged(emojiCell.getValue())
             case false:
-                presenter?.emojiChanged(nil)
+                viewModel.emojiChanged(nil)
         }
     }
     
@@ -439,9 +458,9 @@ extension NewHabitViewController: UICollectionViewDataSource {
         guard let colorCell = cell as? ColorCollectionCell else { return }
         switch isSelected {
             case true:
-                presenter?.colorChanged(colorCell.getValue()?.toCardColor())
+                viewModel.colorChanged(colorCell.getValue()?.toCardColor())
             case false:
-                presenter?.colorChanged(nil)
+                viewModel.colorChanged(nil)
         }
     }
 }
@@ -476,33 +495,21 @@ extension NewHabitViewController: UICollectionViewDelegateFlowLayout {
     }
 }
 
-// MARK: - NewHabitViewControllerProtocol
-
-extension NewHabitViewController: NewHabitViewControllerProtocol {
-    func showTrackerNameError() {
-        trackerNameTextField.showError()
-    }
-
-    func hideTrackerNameError() {
-        trackerNameTextField.hideError()
-    }
-
-    func deactivateCreateButton() {
-        createButton.isEnabled = false
-        createButton.backgroundColor = ViewConstants.inactiveCreateButtonColor
-    }
-
-    func activateCreateButton() {
+extension NewHabitViewController {
+    func createButtonActiveState() {
         createButton.isEnabled = true
         createButton.backgroundColor = ViewConstants.activeCreateButtonColor
     }
     
-    func updateSelectedCategoryCaption(_ caption: String) {
-        categoryButton.setSubLabel(subLabel: caption)
+    func createButtonInactiveState() {
+        createButton.isEnabled = false
+        createButton.backgroundColor = ViewConstants.inactiveCreateButtonColor
     }
-    
-    func updateSelectedScheduleButtonCaption(_ caption: String) {
-        scheduleButton.setSubLabel(subLabel: caption)
+}
+
+extension NewHabitViewController: CategoryViewControllerProtocol {
+    func categoryDidSelect(_ category: CategoryViewModel, completion: @escaping () -> Void) {
+        viewModel.categoryChanged(TrackerCategory(id: category.id, name: category.name))
+        completion()
     }
-    
 }
