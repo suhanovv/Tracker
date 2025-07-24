@@ -29,7 +29,7 @@ final class CategoriesViewModel {
     var isLogoHidden: Bool {
         dataProvider.numberOfCategories != 0
     }
-    private var selectedCategoryId: UUID? = nil {
+    private var selectedCategoryId: UUID? {
         didSet {
             categoriesBinding?()
         }

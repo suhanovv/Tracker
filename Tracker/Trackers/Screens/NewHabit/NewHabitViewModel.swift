@@ -42,7 +42,7 @@ final class NewHabitViewModel: NewHabitViewModelProtocol {
             let validationResult = TrackerNameValidator.validate(trackerName)
             switch validationResult {
                 case .tooLong:
-                    trackerNameErrorBinding?(validationResult.resultDescription())
+                    trackerNameErrorBinding?(validationResult.resultDescription)
                 default:
                     trackerNameErrorBinding?(nil)
             }

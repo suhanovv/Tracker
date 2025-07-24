@@ -52,11 +52,11 @@ extension TrackerCategoryDataProvider: NSFetchedResultsControllerDelegate {
 extension TrackerCategoryDataProvider: TrackerCategoryDataProviderProtocol {
 
     var numberOfCategories: Int {
-        return fetchedResultsController.fetchedObjects?.count ?? 0
+        fetchedResultsController.fetchedObjects?.count ?? 0
     }
     
     func category(at index: IndexPath) -> TrackerCategory? {
-        return fetchedResultsController.object(at: index).toDomainModel()
+        fetchedResultsController.object(at: index).toDomainModel()
     }
     
     func deleteCategory(byId id: UUID) {

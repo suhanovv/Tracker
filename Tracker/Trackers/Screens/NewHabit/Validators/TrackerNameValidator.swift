@@ -14,7 +14,7 @@ final class TrackerNameValidator {
         case tooLong
         case valid
         
-        func resultDescription() -> String {
+        var resultDescription: String {
             switch self {
                 case .empty: return "Обязательное поле"
                 case .tooLong: return "Ограничение 38 символов"

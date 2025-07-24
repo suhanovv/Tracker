@@ -13,7 +13,6 @@ protocol TrackersViewModelProtocol {
     var numberOfSections: Int { get }
     
     var selectedDateBinding: ((Date) -> Void)? { get set }
-    var numberOfSectionBinding: ((Int) -> Void)? { get set }
     var searchTextBinding: ((String) -> Void)? { get set }
     var trackersChangedBinding: ((TrackerStoreUpdate) -> Void)? { get set }
     var categoriesChangedBinding: (() -> Void)? { get set }
@@ -49,7 +48,6 @@ final class TrackersViewModel: TrackersViewModelProtocol {
     
     var selectedDateBinding: ((Date) -> Void)?
     var searchTextBinding: ((String) -> Void)?
-    var numberOfSectionBinding: ((Int) -> Void)?
     var changeFilterBinding: ((TrackerFilter) -> Void)?
     var trackersChangedBinding: ((TrackerStoreUpdate) -> Void)?
     var categoriesChangedBinding: (() -> Void)?

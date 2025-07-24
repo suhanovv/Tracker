@@ -34,11 +34,11 @@ final class TrackersViewController: UIViewController {
     private func bind() {
         viewModel.selectedDateBinding = {[weak self] _ in
             self?.collectionView.reloadData()
+            self?.updateEmptyLogoVisibility()
         }
-        viewModel.searchTextBinding = { [weak self] _ in self?.collectionView.reloadData() }
-        viewModel.numberOfSectionBinding = { [weak self] sections in
-            self?.updateEmptyLogoVisibility(sections: sections)
+        viewModel.searchTextBinding = {[weak self] _ in
             self?.collectionView.reloadData()
+            self?.updateEmptyLogoVisibility()
         }
         viewModel.trackersChangedBinding = { [weak self] update in
             guard let self else { return }
@@ -51,11 +51,11 @@ final class TrackersViewController: UIViewController {
                 self.collectionView.reloadItems(at: Array(update.updatedIndexes))
 
             }
-            self.updateCategories()
+            self.updateEmptyLogoVisibility()
         }
         viewModel.categoriesChangedBinding = { [weak self] in
             self?.collectionView.reloadData()
-            self?.updateCategories()
+            self?.updateEmptyLogoVisibility()
         }
     }
     
@@ -132,8 +132,8 @@ final class TrackersViewController: UIViewController {
         setupEmptyTrackersLogo()
     }
 
-    private func updateCategories() {
-        if collectionView.numberOfSections == 0 {
+    private func updateEmptyLogoVisibility() {
+        if viewModel.numberOfSections == 0 {
             emptyTrackersLogo.show()
         } else {
             emptyTrackersLogo.hide()
@@ -269,7 +269,7 @@ extension TrackersViewController {
     
     private func setupEmptyTrackersLogo() {
         setupEmptyTrackersLogoConstraints()
-        updateEmptyLogoVisibility(sections: viewModel.numberOfSections)
+        updateEmptyLogoVisibility()
     }
     
     private func configureCollectionViewDelegates() {
@@ -312,10 +312,6 @@ extension TrackersViewController {
             emptyTrackersLogo.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: ViewConstants.sidesIndent),
             emptyTrackersLogo.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -ViewConstants.sidesIndent),
         ])
-    }
-    
-    private func updateEmptyLogoVisibility(sections: Int) {
-        sections > 0 ? emptyTrackersLogo.hide() : emptyTrackersLogo.show()
     }
 }
 

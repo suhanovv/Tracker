@@ -60,8 +60,8 @@ final class OnboardingViewController: UIPageViewController {
     
     @objc private func handlePageControl( sender: UIPageControl) {
         guard
-            let currenVC = self.viewControllers?.first,
-            let currentVCIndex = pages.firstIndex(of: currenVC)
+            let currentVC = self.viewControllers?.first,
+            let currentVCIndex = pages.firstIndex(of: currentVC)
         else { return }
         
         let newIndex = sender.currentPage

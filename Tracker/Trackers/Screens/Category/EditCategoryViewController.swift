@@ -11,7 +11,7 @@ final class EditCategoryViewController: UIViewController {
     
     private var viewModel: EditCategoryViewModel
     
-    lazy private var categoryNameTextField: TextFieldWithErrorView = {
+    private lazy var categoryNameTextField: TextFieldWithErrorView = {
        let view = TextFieldWithErrorView(placeholder: "Введите название категории")
         view.translatesAutoresizingMaskIntoConstraints = false
         view.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
@@ -23,7 +23,7 @@ final class EditCategoryViewController: UIViewController {
         return view
     }()
     
-    lazy private var saveButton: UIButton = {
+    private lazy var saveButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Готово", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
@@ -62,13 +62,8 @@ final class EditCategoryViewController: UIViewController {
     
     private func bind() {
         viewModel.isButtonActiveBinding = { [weak self] isActive in
-            if isActive {
-                self?.saveButton.isEnabled = true
-                self?.saveButton.backgroundColor = .ypBlack
-            } else {
-                self?.saveButton.isEnabled = false
-                self?.saveButton.backgroundColor = .ypGrey
-            }
+            self?.saveButton.isEnabled = isActive
+            self?.saveButton.backgroundColor = isActive ? .ypBlack : .ypGrey
         }
         
         viewModel.isNameErrorActiveBinding = { [weak self] isActive in

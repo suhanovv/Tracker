@@ -112,7 +112,7 @@ extension TextFieldWithErrorView {
     }
     
     func showError(_ error: String?) {
-        if let error = error {
+        if let error {
             errorLabel.text = error
         }
         errorLabel.isHidden = false
