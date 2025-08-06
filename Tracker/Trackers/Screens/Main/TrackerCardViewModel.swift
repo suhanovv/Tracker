@@ -7,11 +7,12 @@
 
 import Foundation
 
+// MARK: - TrackerCardViewModelProtocol
 protocol TrackerCardViewModelProtocol {
     var trackerName: String { get }
     var emoji: String { get }
     var cardColor: CardColor { get }
-    var daysCountString: String { get }
+    var daysCount: Int { get }
     var isCompleted: Bool { get }
     var isActive: Bool { get }
     
@@ -21,6 +22,7 @@ protocol TrackerCardViewModelProtocol {
     func toggleComplete()
 }
 
+// MARK: - TrackerCardViewModel
 final class TrackerCardViewModel: TrackerCardViewModelProtocol {
     private var tracker: Tracker
     private var selectedDate: Date
@@ -30,7 +32,7 @@ final class TrackerCardViewModel: TrackerCardViewModelProtocol {
     var cardColor: CardColor { tracker.color }
     var isActive: Bool { Date() >= selectedDate }
     
-    private(set) var daysCountString: String
+    private(set) var daysCount: Int
     private(set) var isCompleted: Bool {
         didSet {
             isCompletedBinding?(isCompleted)
@@ -51,7 +53,7 @@ final class TrackerCardViewModel: TrackerCardViewModelProtocol {
         self.isCompleted = self.recordsStore.isExist(
             TrackerRecord(date: selectedDate, trackerId: tracker.id)
         )
-        self.daysCountString = String.pluralize(days: tracker.countChecks)
+        self.daysCount = tracker.countChecks
     }
     
     func toggleComplete() {

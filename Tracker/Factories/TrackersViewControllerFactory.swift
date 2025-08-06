@@ -10,10 +10,13 @@ import UIKit
 final class TrackersViewControllerFactory: ViewControllerFactoryProtocol {
     func make() -> UIViewController {
         let trackerRecordStore = TrackerRecordStore()
-        let dataProvider = TrackerDataProvider()
+        let trackerStore = TrackerStore()
+        let categoryStore = TrackerCategoryStore()
+        let dataProvider = TrackerDataProvider(store: trackerStore)
         let viewModel = TrackersViewModel(
             dataProvider: dataProvider,
-            recordStore: trackerRecordStore
+            recordStore: trackerRecordStore,
+            categoryStore: categoryStore
         )
         dataProvider.delegate = viewModel
         let viewController = TrackersViewController(viewModel: viewModel)
@@ -22,8 +25,7 @@ final class TrackersViewControllerFactory: ViewControllerFactoryProtocol {
 
     // MARK: - Helpers
 
-    private func makeDefaultFilter(for date: Date) -> TrackerFilter {
-        let day = DayOfWeek.dayOfWeekFromDate(date)
-        return TrackerFilter(dayOfWeek: day)
+    private func makeDefaultFilter(for date: Date) -> TrackerFilterRequest {
+        TrackerFilterRequest(date: date)
     }
 }

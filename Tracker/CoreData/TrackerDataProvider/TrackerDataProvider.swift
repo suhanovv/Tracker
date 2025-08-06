@@ -17,13 +17,15 @@ protocol TrackerDataProviderDelegate: AnyObject {
 
 // MARK: - TrackerDataProviderProtocol
 protocol TrackerDataProviderProtocol {
+    var trackerStore: TrackerStoreProtocol { get }
     var numberOfSections: Int { get }
     var numberOfTrackers: Int { get }
     func numberOfItemsInSection(_ section: Int) -> Int
     func sectionName(at: Int) -> String?
     func trackerAt(_ index: IndexPath) -> Tracker?
+    func removeTracker(at index: IndexPath)
 
-    func updateFilter(_ filter: TrackerFilter)
+    func updateFilter(_ filter: TrackerFilterRequest)
 }
 
 // MARK: - TrackerDataProvider
@@ -31,6 +33,7 @@ final class TrackerDataProvider: NSObject {
     weak var delegate: TrackerDataProviderDelegate?
     
     private var fetchedResultsController: NSFetchedResultsController<TrackerEntity>?
+    private(set) var trackerStore: TrackerStoreProtocol
     private var categoryChangeObserver: NSObjectProtocol?
     
     private var insertedIndexes: Set<IndexPath>?
@@ -42,10 +45,11 @@ final class TrackerDataProvider: NSObject {
     private var deletedSections: IndexSet?
     
     
-    override init() {
+    init(store: TrackerStoreProtocol) {
+        trackerStore = store
         super.init()
+        setupCategoryChangeObserver()
         setupFetchedResultsController()
-        
     }
     
     private func setupCategoryChangeObserver() {
@@ -73,6 +77,8 @@ final class TrackerDataProvider: NSObject {
     
     private func setupFetchedResultsController() {
         let fetchRequest = TrackerEntity.fetchRequest()
+        fetchRequest.returnsObjectsAsFaults = false
+        fetchRequest.relationshipKeyPathsForPrefetching = ["category", "records.name"]
         fetchRequest.sortDescriptors = [
             NSSortDescriptor(key: #keyPath(TrackerEntity.category.name), ascending: true),
             NSSortDescriptor(key: #keyPath(TrackerEntity.name), ascending: true)
@@ -85,17 +91,24 @@ final class TrackerDataProvider: NSObject {
         fetchedResultsController?.delegate = self
     }
     
-    private func makeFilterPredicate(filter: TrackerFilter) -> NSPredicate {
+    private func makeFilterPredicate(filter: TrackerFilterRequest) -> NSPredicate {
         var predicates: [NSPredicate] = [
             NSPredicate(
                 format: "%K CONTAINS[c] %@",
                 #keyPath(TrackerEntity.schedule), filter.dayOfWeek.rawValue)
         ]
-        if let name = filter.name, !name.isEmpty{
+        if let name = filter.name, !name.isEmpty {
             predicates.append(
                 NSPredicate(
                     format: "%K CONTAINS[c] %@",
                     #keyPath(TrackerEntity.name), name))
+        }
+        if let isComplete = filter.isCompleted {
+            let format = isComplete ? "SUBQUERY(%K, $record, $record.date == %@).@count > 0" : "SUBQUERY(%K, $record, $record.date == %@).@count == 0"
+            predicates.append(
+                NSPredicate(
+                    format: format,
+                    #keyPath(TrackerEntity.records), filter.date as NSDate))
         }
         return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
     }
@@ -170,6 +183,11 @@ extension TrackerDataProvider: NSFetchedResultsControllerDelegate{
         case .update:
             guard let indexPath else { return }
             updatedIndexes?.insert(indexPath)
+                
+        case .move:
+            guard let indexPath, let newIndexPath else { return }
+            deletedIndexes?.insert(indexPath)
+            insertedIndexes?.insert(newIndexPath)
             
         default:
             break
@@ -197,11 +215,16 @@ extension TrackerDataProvider: TrackerDataProviderProtocol {
     }
     
     func trackerAt(_ index: IndexPath) -> Tracker? {
-        fetchedResultsController?.object(at: index).toDomainModel()
+        return fetchedResultsController?.object(at: index).toDomainModel()
     }
     
-    func updateFilter(_ filter: TrackerFilter) {
+    func updateFilter(_ filter: TrackerFilterRequest) {
         fetchedResultsController?.fetchRequest.predicate = makeFilterPredicate(filter: filter)
         try? fetchedResultsController?.performFetch()
+    }
+    
+    func removeTracker(at index: IndexPath) {
+        guard let tracker = fetchedResultsController?.object(at: index).toDomainModel() else { return }
+        try? trackerStore.remove(tracker)
     }
 }

@@ -120,5 +120,4 @@ final class NewHabitMenuElement: UIControl {
     func setSubLabel(subLabel: String) {
         self.subLabel.text = subLabel
     }
- 
 }

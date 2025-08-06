@@ -7,8 +7,13 @@
 
 import Foundation
 
-// MARK: - NewHabitViewPresenterProtocol
-protocol NewHabitViewModelProtocol: AnyObject {
+enum FormType {
+    case edit
+    case add
+}
+
+// MARK: - EditTrackerViewModelProtocol
+protocol EditTrackerViewModelProtocol: AnyObject {
     var trackerName: String { get }
     var trackerNameError: String? { get }
     var schedule: [DayOfWeek] { get }
@@ -17,6 +22,8 @@ protocol NewHabitViewModelProtocol: AnyObject {
     var emoji: String? { get }
     var color: CardColor? { get }
     var isFormValid: Bool { get }
+    var formType: FormType { get }
+    var daysCount: Int? { get }
     
     var trackerNameErrorBinding: ((String?) -> Void)? { get set }
     var scheduleBinding: (([DayOfWeek]) -> Void)? { get set }
@@ -32,11 +39,19 @@ protocol NewHabitViewModelProtocol: AnyObject {
     func emojiChanged(_ emoji: String?)
     func colorChanged(_ colorName: CardColor?)
 
-    func createNewTracker(completion: @escaping (() -> Void))
+    func saveTracker(completion: @escaping (() -> Void))
 }
 
-// MARK: - NewHabitViewPresenter
-final class NewHabitViewModel: NewHabitViewModelProtocol {
+// MARK: - EditTrackerViewModelProtocol
+final class EditTrackerViewModel: EditTrackerViewModelProtocol {
+    var formType: FormType {
+        tracker == nil ? .add : .edit
+    }
+    var daysCount: Int? {
+        tracker?.countChecks
+    }
+    private var tracker: Tracker?
+    
     private(set) var trackerName: String = "" {
         didSet {
             let validationResult = TrackerNameValidator.validate(trackerName)
@@ -101,9 +116,18 @@ final class NewHabitViewModel: NewHabitViewModelProtocol {
     private let trackerCategoryStore: TrackerCategoryStoreProtocol
     private let trackerStore: TrackerStoreProtocol
 
-    init(trackerStore: TrackerStoreProtocol, categoryStore: TrackerCategoryStoreProtocol) {
+    init(trackerStore: TrackerStoreProtocol, categoryStore: TrackerCategoryStoreProtocol, tracker: Tracker? = nil) {
         self.trackerStore = trackerStore
         self.trackerCategoryStore = categoryStore
+        if let tracker {
+            self.tracker = tracker
+            trackerName = tracker.name
+            schedule = tracker.schedule
+            category = tracker.category
+            emoji = tracker.emoji
+            color = tracker.color
+            isFormValid = true
+        }
     }
     
     func trackerNameChanged(_ name: String) {
@@ -139,7 +163,7 @@ final class NewHabitViewModel: NewHabitViewModelProtocol {
     
     private func makeScheduleCaption(_ schedule: [DayOfWeek]) -> String {
         if schedule.count == DayOfWeek.allCases.count {
-            return "Каждый день"
+            return NSLocalizedString("dayOfWeek.all", comment: "Каждый день")
         } else {
             return schedule.sorted {
                 let days = DayOfWeek.allCases
@@ -159,21 +183,36 @@ final class NewHabitViewModel: NewHabitViewModelProtocol {
     }
     
     
-    func createNewTracker(completion: @escaping (() -> Void)) {
+    func saveTracker(completion: @escaping (() -> Void)) {
         guard
             let currentCategory = category,
             let color,
             let emoji
         else { return }
         
-        let tracker = Tracker(
-            name: trackerName,
-            color: color,
-            emoji: emoji,
-            schedule: schedule
-        )
-        
-        try? trackerStore.create(tracker, in: currentCategory)
+        switch formType {
+            case .add:
+                let tracker = Tracker(
+                    name: trackerName,
+                    color: color,
+                    emoji: emoji,
+                    schedule: schedule,
+                    category: currentCategory
+                )
+                try? trackerStore.create(tracker)
+            case .edit:
+                guard let oldTracker = self.tracker else { return }
+                let tracker = Tracker(
+                    id: oldTracker.id,
+                    name: trackerName,
+                    color: color,
+                    emoji: emoji,
+                    schedule: schedule,
+                    countChecks: oldTracker.countChecks,
+                    category: currentCategory
+                )
+                try? trackerStore.update(tracker)
+        }
         
         completion()
     }
