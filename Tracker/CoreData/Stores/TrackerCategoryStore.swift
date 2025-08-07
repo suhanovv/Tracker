@@ -50,6 +50,13 @@ final class TrackerCategoryStore: TrackerCategoryStoreProtocol {
         try context.save()
     }
     
+    func removeAll() throws {
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "TrackerCategoryEntity")
+        let batchDeleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+        
+        try context.execute(batchDeleteRequest)
+    }
+    
     func getAll() throws -> [TrackerCategory] {
         let fetchRequest = TrackerCategoryEntity.fetchRequest()
         let entities = try context.fetch(fetchRequest)

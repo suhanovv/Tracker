@@ -15,8 +15,8 @@ final class CreateTrackerViewController: UIViewController {
         static let sideIndent: CGFloat = 20
     }
     
-    private lazy var habitButton: UIButton = makeButton(title: "Привычка")
-    private lazy var unregularEventButton: UIButton = makeButton(title: "Нерегулярное событие")
+    private lazy var habitButton: UIButton = makeButton(title: NSLocalizedString("habitButtonTitle", comment: "Привычка"))
+    private lazy var unregularEventButton: UIButton = makeButton(title: NSLocalizedString("UnregularEventButtonTitle", comment: "Нерегулярное событие"))
     private lazy var stack: UIStackView = {
         let stack = UIStackView(arrangedSubviews: [habitButton, unregularEventButton])
         stack.axis = .vertical
@@ -43,16 +43,14 @@ final class CreateTrackerViewController: UIViewController {
     }
     
     private func setupConstraints() {
-        NSLayoutConstraint.activate(
-[
+        NSLayoutConstraint.activate([
             habitButton.heightAnchor.constraint(equalToConstant: ViewConstants.buttonHeihgt),
             unregularEventButton.heightAnchor.constraint(equalToConstant: ViewConstants.buttonHeihgt),
             
             stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: ViewConstants.sideIndent),
             stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -ViewConstants.sideIndent),
             stack.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-        ]
-)
+        ])
     }
     
     private func makeButton(title: String) -> UIButton {
@@ -61,13 +59,14 @@ final class CreateTrackerViewController: UIViewController {
         button.backgroundColor = .ypBlack
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.layer.cornerRadius = Constants.cornerRadius
+        button.setTitleColor(.ypWhite, for: .normal)
         button.layer.masksToBounds = true
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }
     
     private func setupNavigation() {
-        title = "Создание трекера"
+        title = NSLocalizedString("createTrackerTitle", comment: "Создание трекера")
         navigationItem.hidesBackButton = true
     }
     
@@ -77,6 +76,7 @@ final class CreateTrackerViewController: UIViewController {
     
     @objc private func handleHabitButtonTapped() {
         let newHabitVC = NewHabitViewControlllerFactory().make()
+        newHabitVC.title = NSLocalizedString("newHabitTitle", comment: "Новая привычка")
         navigationController?.pushViewController(newHabitVC, animated: true)
     }
 }

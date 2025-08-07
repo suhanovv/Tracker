@@ -60,7 +60,7 @@ extension CategoriesViewModel: CategoriesViewModelProtocol {
     
     func toggleSelectionCategory(at indexPath: IndexPath) {
         guard let category = dataProvider.category(at: indexPath) else { return }
-        selectedCategoryId = selectedCategoryId == category.id ? nil : category.id
+        selectedCategoryId = category.id
     }
     
     func removeCategory(at indexPath: IndexPath) {

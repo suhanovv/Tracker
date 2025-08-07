@@ -18,7 +18,9 @@ extension TrackerEntity: DomainModelProtocol {
             let schedule = schedule?.components(separatedBy: ",").map({
                 DayOfWeek(rawValue: $0) ?? .monday
             }),
-            let records
+            let records,
+            let category = category?.toDomainModel()
+            
         else { return nil }
         
         return Tracker(
@@ -27,7 +29,8 @@ extension TrackerEntity: DomainModelProtocol {
             color: cardColor,
             emoji: emoji,
             schedule: schedule,
-            countChecks: records.count
+            countChecks: records.count,
+            category: category
         )
     }
 }

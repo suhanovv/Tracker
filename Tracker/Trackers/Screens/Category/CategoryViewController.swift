@@ -22,7 +22,7 @@ final class CategoryViewController: UIViewController {
 
     private lazy var addCategory: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Добавить категорию", for: .normal)
+        button.setTitle(NSLocalizedString("categories.addCategoryButtonTitle", comment: "Добавить категорию"), for: .normal)
         button.setTitleColor(.  ypWhite, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = .ypBlack
@@ -35,7 +35,7 @@ final class CategoryViewController: UIViewController {
     
     private lazy var emptyLogo: EmptyCollectionLogoView = {
         let emptyView = EmptyCollectionLogoView(
-            labelText: "Привычки и события можно\n объединить по смыслу",
+            labelText: NSLocalizedString("categories.emptyLogo.labelText", comment: "Привычки и события можно\n объединить по смыслу"),
             resource: .emptyTrackersLogo
         )
         emptyView.translatesAutoresizingMaskIntoConstraints = false
@@ -80,14 +80,14 @@ final class CategoryViewController: UIViewController {
         setupNavigation()
         makeViews()
         setupConstraints()
-        setupCollectionView()
+        setupTableView()
         
     }
     
     @objc func handleAddCategoryButtonTapped() {
         let viewModel = EditCategoryViewModel()
         let vc = EditCategoryViewController(viewModel: viewModel)
-        vc.title = "Новая категория"
+        vc.title = NSLocalizedString("newCategory.title", comment: "Новая категория")
         navigationController?.pushViewController(vc, animated: true)
     }
     
@@ -96,7 +96,7 @@ final class CategoryViewController: UIViewController {
     }
     
     private func setupNavigation() {
-        title = "Категория"
+        title = NSLocalizedString("categories.title", comment:"Категория")
         navigationItem.hidesBackButton = true
     }
     
@@ -104,11 +104,11 @@ final class CategoryViewController: UIViewController {
         view.addSubviews(tableView, emptyLogo, addCategory)
     }
     
-    private func setupCollectionView() {
-        configureCollectionViewDelegates()
+    private func setupTableView() {
+        configureTableViewDelegates()
     }
     
-    private func configureCollectionViewDelegates() {
+    private func configureTableViewDelegates() {
         tableView.dataSource = self
         tableView.delegate = self
         tableView.register(CategoryViewCell.self, forCellReuseIdentifier: "categoryCell")
@@ -179,24 +179,24 @@ extension CategoryViewController: UITableViewDelegate {
         UIContextMenuConfiguration(actionProvider: { actions in
 
             return UIMenu(children: [
-                UIAction(title: "Редактировать") { [weak self] _ in
+                UIAction(title: NSLocalizedString("categories.contextMenu.edit", comment: "Редактировать")) { [weak self] _ in
                     guard let category = self?.viewModel.category(at: indexPath) else { return }
                     let viewModel = EditCategoryViewModel(category: category)
                     let vc = EditCategoryViewController(viewModel: viewModel)
-                    vc.title = "Новая категория"
+                    vc.title = NSLocalizedString("newCategory.title", comment: "Новая категория")
                     self?.navigationController?.pushViewController(vc, animated: true)
                 },
-                UIAction(title: "Удалить", attributes: .destructive) { [weak self] _ in
+                UIAction(title: NSLocalizedString("categories.contextMenu.delete", comment: "Удалить"), attributes: .destructive) { [weak self] _ in
                     
                     let alert = UIAlertController(
-                        title: "Эта категория точно не нужна?",
+                        title: NSLocalizedString("delete_category_confirmation_title", comment: "Эта категория точно не нужна?"),
                         message: nil,
                         preferredStyle: .actionSheet
                     )
-                    alert.addAction(UIAlertAction(title: "Удалить", style: .destructive) { [weak self] _ in
+                    alert.addAction(UIAlertAction(title: NSLocalizedString("delete_category_confirmation_delete", comment: "Удалить"), style: .destructive) { [weak self] _ in
                         self?.viewModel.removeCategory(at: indexPath)
                     })
-                    alert.addAction(UIAlertAction(title: "Отмена", style: .cancel))
+                    alert.addAction(UIAlertAction(title: NSLocalizedString("delete_category_confirmation_cancel", comment: "Отмена"), style: .cancel))
                     self?.present(alert, animated: true)
                 }
             ])

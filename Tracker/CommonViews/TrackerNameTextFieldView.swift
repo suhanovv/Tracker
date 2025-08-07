@@ -7,6 +7,8 @@
 
 import UIKit
 
+// MARK: - TextFieldWithErrorView
+
 final class TextFieldWithErrorView: UIView {
     lazy private var textField: UITextField = {
         let textField = UITextField()
@@ -63,6 +65,7 @@ final class TextFieldWithErrorView: UIView {
     }
 }
 
+// MARK: - Constraints TextFieldWithErrorView
 extension TextFieldWithErrorView {
     private func setupConstraints() {
         setupTextFieldWrapperViewConstraints()
@@ -101,6 +104,8 @@ extension TextFieldWithErrorView {
         ])
     }
 }
+
+// MARK: - TextFieldWithErrorView Actions
 
 extension TextFieldWithErrorView {
     func setDelegate(_ delegate: UITextFieldDelegate) {

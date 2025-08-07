@@ -31,7 +31,7 @@ final class EmojiCollectionCell: UICollectionViewCell {
     
     private func setupAppearance() {
         contentView.backgroundColor = .ypWhite
-        contentView.layer.cornerRadius = 16
+        contentView.layer.cornerRadius = Constants.cornerRadius
     }
     
     private func setupView() {

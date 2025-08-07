@@ -23,7 +23,6 @@ final class ScheduleViewController: UIViewController {
         view.backgroundColor = .ypInputGrey
         view.layer.cornerRadius = Constants.cornerRadius
         view.layer.masksToBounds = true
-        view.backgroundColor = .ypInputGrey
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -39,7 +38,7 @@ final class ScheduleViewController: UIViewController {
     
     private lazy var okButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Готово", for: .normal)
+        button.setTitle(NSLocalizedString("schedule.ok.title", comment: "Готово"), for: .normal)
         button.setTitleColor(.  ypWhite, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = .ypBlack
@@ -117,7 +116,7 @@ final class ScheduleViewController: UIViewController {
     }
     
     private func setupNavigation() {
-        title = "Расписание"
+        title = NSLocalizedString("schedule.title", comment: "Расписание")
         navigationItem.hidesBackButton = true
     }
 }

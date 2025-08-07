@@ -13,8 +13,8 @@ import UIKit
 final class OnboardingViewController: UIPageViewController {
     // MARK: - variables
     private lazy var pages: [UIViewController] = [
-        OnboardingPageViewController(imageName: "OnboardingBlue", captionText: "Отслеживайте только то, что хотите"),
-        OnboardingPageViewController(imageName: "OnboardingRed", captionText: "Даже если это не литры воды и йога")
+        OnboardingPageViewController(imageName: "OnboardingBlue", captionText: NSLocalizedString("onboarding.blue", comment: "Отслеживайте только то, что хотите")),
+        OnboardingPageViewController(imageName: "OnboardingRed", captionText: NSLocalizedString("onboarding.blue", comment: "Даже если это не литры воды и йога"))
     ]
     private let onboardingService: OnboardingServiceProtocol
     

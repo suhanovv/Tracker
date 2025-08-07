@@ -10,7 +10,7 @@ import UIKit
 
 // MARK: - NewHabitViewController
 
-final class NewHabitViewController: UIViewController {
+final class EditTrackerViewController: UIViewController {
     private enum ViewConstants {
         static let sidesIndent: CGFloat = 16
         static let lementsHeight: CGFloat = 24
@@ -18,20 +18,35 @@ final class NewHabitViewController: UIViewController {
         static let inactiveCreateButtonColor: UIColor = .ypGrey
     }
     
-    private var viewModel: NewHabitViewModelProtocol
+    private var viewModel: EditTrackerViewModelProtocol
     private let emojis: [String] = [
         "🙂", "😻", "🌺", "🐶", "❤️", "😱",
         "😇", "😡", "🥶", "🤔", "🙌", "🍔",
         "🥦", "🏓", "🥇", "🎸", "🏝", "😪"
     ]
     
-    private let headers: [String] = ["Emoji", "Цвет"]
+    private let headers: [String] = ["Emoji", NSLocalizedString("color", comment: "Цвет")]
     
     // MARK: - UI Elements
+    lazy private var trackerRecordsLabel: UILabel = {
+        let view = UILabel()
+        view.font = .systemFont(ofSize: 32, weight: .bold)
+        view.textColor = .ypBlack
+        view.textAlignment = .center
+        view.translatesAutoresizingMaskIntoConstraints = false
+        if let daysCount = viewModel.daysCount {
+            view.text = String.localizedStringWithFormat(
+                NSLocalizedString("daysCount", comment: ""),
+                daysCount)
+        }
+        return view
+    }()
+    
     lazy private var trackerNameTextField: TextFieldWithErrorView = {
-       let view = TextFieldWithErrorView(placeholder: "Введите название трекера")
+       let view = TextFieldWithErrorView(placeholder: NSLocalizedString("tracker_name.text_field.placeholder", comment: "Введите название трекера"))
         view.translatesAutoresizingMaskIntoConstraints = false
         view.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
+        view.setText(viewModel.trackerName)
         return view
     }()
     
@@ -55,29 +70,31 @@ final class NewHabitViewController: UIViewController {
     
     lazy private var categoryButton: NewHabitMenuElement = {
         let subTitle = viewModel.category?.name
-        let view = NewHabitMenuElement(with: "Категория", subTitle: subTitle, divider: true)
+        let view = NewHabitMenuElement(with: NSLocalizedString("edit_tracker.category_button.title", comment: "Категория"), subTitle: subTitle, divider: true)
         view.translatesAutoresizingMaskIntoConstraints = false
         view.addTarget(self, action: #selector(handleCategoryButtonTapped), for: .touchUpInside)
+        view.setSubLabel(subLabel: viewModel.category?.name ?? "")
         return view
     }()
     
     lazy private var scheduleButton: NewHabitMenuElement = {
-        let view = NewHabitMenuElement(with: "Расписание", divider: false)
+        let view = NewHabitMenuElement(with: NSLocalizedString("edit_tracker.schedule_button.title", comment: "Расписание"), divider: false)
         view.translatesAutoresizingMaskIntoConstraints = false
         view.addTarget(self, action: #selector(handleScheduleButtonTapped), for: .touchUpInside)
+        view.setSubLabel(subLabel: viewModel.scheduleCaption)
         return view
     }()
 
     lazy private var cancelButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Отменить", for: .normal)
+        button.setTitle(NSLocalizedString("edit_tracker.cancel_button.title", comment: "Отменить"), for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.setTitleColor(.ypRed, for: .normal)
         button.layer.cornerRadius = Constants.cornerRadius
         button.layer.masksToBounds = true
         button.layer.borderColor = UIColor.ypRed.cgColor
         button.layer.borderWidth = 1
-        button.backgroundColor = .white
+        button.backgroundColor = .ypWhite
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(handleCancelButtonTapped), for: .touchUpInside)
         return button
@@ -85,13 +102,16 @@ final class NewHabitViewController: UIViewController {
     
     lazy private var createButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Создать", for: .normal)
+        switch viewModel.formType {
+            case .add: button.setTitle(NSLocalizedString("edit_tracker.create_button.title", comment: "Создать"), for: .normal)
+            case .edit: button.setTitle(NSLocalizedString("edit_tracker.save_button.title", comment: "Сохранить"), for: .normal)
+        }
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.setTitleColor(.ypWhite, for: .normal)
         button.layer.cornerRadius = Constants.cornerRadius
         button.layer.masksToBounds = true
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.addTarget(self, action: #selector(handleCreateButtonTapped), for: .touchUpInside)
+        button.addTarget(self, action: #selector(handleSaveButtonTapped), for: .touchUpInside)
         
         return button
     }()
@@ -110,12 +130,13 @@ final class NewHabitViewController: UIViewController {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: collectionViewLayout)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.backgroundColor = .ypWhite
+        
         return collectionView
     }()
     
     // MARK: - LifeCycle
     
-    init(viewModel: NewHabitViewModelProtocol) {
+    init(viewModel: EditTrackerViewModelProtocol) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
         self.bind()
@@ -173,10 +194,12 @@ final class NewHabitViewController: UIViewController {
             trackerNameTextField, menuButtonWrapperView, buttonsStackView, collectionView
         )
         viewModel.isFormValid ? createButtonActiveState(): createButtonInactiveState()
+        if viewModel.formType == .edit {
+            view.addSubview(trackerRecordsLabel)
+        }
     }
     
     private func setupNavigation() {
-        title = "Новая привычка"
         navigationItem.hidesBackButton = true
     }
     
@@ -203,7 +226,7 @@ final class NewHabitViewController: UIViewController {
 
 // MARK: - UITextFieldDelegate
 
-extension NewHabitViewController: UITextFieldDelegate {
+extension EditTrackerViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
     }
@@ -211,8 +234,11 @@ extension NewHabitViewController: UITextFieldDelegate {
 
 // MARK: - NewHabitViewController Constraints
 
-extension NewHabitViewController {
+extension EditTrackerViewController {
     private func setupConstraints() {
+        if viewModel.formType == .edit {
+            setupTrackerRecordsLabelConstraints()
+        }
         setupTrackerNameTextFieldConstraints()
         setupMenuButtonWrapperViewConstraints()
         setupMenuStackViewConstraints()
@@ -222,17 +248,34 @@ extension NewHabitViewController {
         setupCollectionViewConstraints()
     }
     
+    private func setupTrackerRecordsLabelConstraints() {
+        NSLayoutConstraint.activate([
+            trackerRecordsLabel.topAnchor
+                .constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 24),
+            trackerRecordsLabel.leadingAnchor
+                .constraint(equalTo: view.leadingAnchor, constant: ViewConstants.sidesIndent),
+            trackerRecordsLabel.trailingAnchor
+                .constraint(equalTo: view.trailingAnchor, constant: -ViewConstants.sidesIndent),
+        ])
+    }
+    
     private func setupTrackerNameTextFieldConstraints() {
-            NSLayoutConstraint.activate([
+        NSLayoutConstraint.activate([
+            trackerNameTextField.leadingAnchor
+                .constraint(equalTo: view.leadingAnchor, constant: ViewConstants.sidesIndent),
+            trackerNameTextField.trailingAnchor
+                .constraint(equalTo: view.trailingAnchor, constant: -ViewConstants.sidesIndent),
+        ])
+        
+        switch viewModel.formType {
+            case .add:
                 trackerNameTextField.topAnchor
-                    .constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 24),
-                trackerNameTextField.leadingAnchor
-                    .constraint(equalTo: view.leadingAnchor, constant: ViewConstants.sidesIndent),
-                trackerNameTextField.trailingAnchor
-                    .constraint(equalTo: view.trailingAnchor, constant: -ViewConstants.sidesIndent),
-
-            ])
+                    .constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 24).isActive = true
+            case .edit:
+                trackerNameTextField.topAnchor
+                    .constraint(equalTo: trackerRecordsLabel.bottomAnchor, constant: 40).isActive = true
         }
+    }
     
     private func setupMenuButtonWrapperViewConstraints() {
         NSLayoutConstraint.activate([
@@ -294,7 +337,7 @@ extension NewHabitViewController {
 
 // MARK: - NewHabitViewController Handlers
 
-extension NewHabitViewController {
+extension EditTrackerViewController {
     
     @objc private func textFieldDidChange(sender: UITextField) {
         guard let name = sender.text else { return }
@@ -322,8 +365,8 @@ extension NewHabitViewController {
         dismiss(animated: true)
     }
     
-    @objc private func handleCreateButtonTapped() {
-        viewModel.createNewTracker { [weak self] in
+    @objc private func handleSaveButtonTapped() {
+        viewModel.saveTracker { [weak self] in
             guard let self else { return }
             self.dismiss(animated: true)
         }
@@ -332,16 +375,16 @@ extension NewHabitViewController {
 
 // MARK: - ScheduleViewControllerDelegate
 
-extension NewHabitViewController: ScheduleViewControllerDelegate {
+extension EditTrackerViewController: ScheduleViewControllerDelegate {
     func scheduleChanged(_ schedule: [DayOfWeek]) {
         viewModel.scheduleChanged(schedule)
     }
 }
 
 // MARK: - UICollectionViewDataSource
-extension NewHabitViewController: UICollectionViewDataSource {
+extension EditTrackerViewController: UICollectionViewDataSource {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return 2
+        2
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -367,8 +410,13 @@ extension NewHabitViewController: UICollectionViewDataSource {
             return UICollectionViewCell()
         }
         
-        cell.configure(with: emojis[indexPath.item])
+        let emoji = emojis[indexPath.item]
         
+        cell.configure(with: emoji)
+        if viewModel.emoji == emoji {
+            cell.activState()
+            collectionView.selectItem(at: indexPath, animated: true, scrollPosition: .left)
+        }
         
         return cell
     }
@@ -381,8 +429,13 @@ extension NewHabitViewController: UICollectionViewDataSource {
             return UICollectionViewCell()
         }
         
-        let color = UIColor.fromCardColor(CardColor.allCases[indexPath.item])
+        let cardColor = CardColor.allCases[indexPath.item]
+        let color = UIColor.fromCardColor(cardColor)
         cell.configure(with: color)
+        if viewModel.color == cardColor {
+            cell.activState()
+            collectionView.selectItem(at: indexPath, animated: true, scrollPosition: .left)
+        }
     
         return cell
     }
@@ -467,7 +520,7 @@ extension NewHabitViewController: UICollectionViewDataSource {
 
 // MARK: - UICollectionViewDelegateFlowLayout
 
-extension NewHabitViewController: UICollectionViewDelegateFlowLayout {
+extension EditTrackerViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         return CGSize(width: 52, height: 52)
     }
@@ -481,7 +534,7 @@ extension NewHabitViewController: UICollectionViewDelegateFlowLayout {
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-        return 0
+        0
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
@@ -495,19 +548,21 @@ extension NewHabitViewController: UICollectionViewDelegateFlowLayout {
     }
 }
 
-extension NewHabitViewController {
+extension EditTrackerViewController {
     func createButtonActiveState() {
         createButton.isEnabled = true
         createButton.backgroundColor = ViewConstants.activeCreateButtonColor
+        createButton.setTitleColor(.ypWhite, for: .normal)
     }
     
     func createButtonInactiveState() {
         createButton.isEnabled = false
         createButton.backgroundColor = ViewConstants.inactiveCreateButtonColor
+        createButton.setTitleColor(.white, for: .normal)
     }
 }
 
-extension NewHabitViewController: CategoryViewControllerProtocol {
+extension EditTrackerViewController: CategoryViewControllerProtocol {
     func categoryDidSelect(_ category: CategoryViewModel, completion: @escaping () -> Void) {
         viewModel.categoryChanged(TrackerCategory(id: category.id, name: category.name))
         completion()
