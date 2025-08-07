@@ -84,4 +84,3 @@ final class StatisticsDataProvider: StatisticsDataProviderProtocol {
         delegate?.didDataUpdate()
     }
 }
-

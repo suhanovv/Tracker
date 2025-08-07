@@ -11,22 +11,8 @@ struct TrackerFilterRequest {
     let dayOfWeek: DayOfWeek
     let name: String?
     let isCompleted: Bool?
-    
-    init(date: Date) {
-        self.date = date
-        self.dayOfWeek = .dayOfWeekFromDate(date)
-        name = nil
-        isCompleted = nil
-    }
-    
-    init(date: Date, name: String) {
-        self.date = date
-        self.dayOfWeek = .dayOfWeekFromDate(date)
-        self.name = name
-        isCompleted = nil
-    }
-    
-    init(date: Date, name: String, isCompleted: Bool) {
+
+    init(date: Date, name: String? = nil, isCompleted: Bool? = nil) {
         self.date = date
         self.dayOfWeek = .dayOfWeekFromDate(date)
         self.name = name

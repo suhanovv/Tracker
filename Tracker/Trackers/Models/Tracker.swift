@@ -16,7 +16,15 @@ struct Tracker {
     let countChecks: Int
     let category: TrackerCategory?
     
-    init(id: UUID, name: String, color: CardColor, emoji: String, schedule: [DayOfWeek], countChecks: Int, category: TrackerCategory? = nil) {
+    init(
+        id: UUID,
+        name: String,
+        color: CardColor,
+        emoji: String,
+        schedule: [DayOfWeek],
+        countChecks: Int,
+        category: TrackerCategory? = nil
+    ) {
         self.id = id
         self.name = name
         self.color = color
@@ -26,7 +34,13 @@ struct Tracker {
         self.category = category
     }
     
-    init(name: String, color: CardColor, emoji: String, schedule: [DayOfWeek], category: TrackerCategory? = nil) {
+    init(
+        name: String,
+        color: CardColor,
+        emoji: String,
+        schedule: [DayOfWeek],
+        category: TrackerCategory? = nil
+    ) {
         self.id = UUID()
         self.name = name
         self.color = color
