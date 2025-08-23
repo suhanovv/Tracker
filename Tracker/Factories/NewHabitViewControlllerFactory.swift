@@ -11,8 +11,8 @@ final class NewHabitViewControlllerFactory: ViewControllerFactoryProtocol {
     func make() -> UIViewController {
         let trackerStore = TrackerStore()
         let trackerCategoryStore = TrackerCategoryStore()
-        let viewModel = NewHabitViewModel(trackerStore: trackerStore, categoryStore: trackerCategoryStore)
-        let vc = NewHabitViewController(viewModel: viewModel)
+        let viewModel = EditTrackerViewModel(trackerStore: trackerStore, categoryStore: trackerCategoryStore)
+        let vc = EditTrackerViewController(viewModel: viewModel)
         return vc
     }
 }

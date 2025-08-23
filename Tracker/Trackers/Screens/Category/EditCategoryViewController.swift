@@ -12,12 +12,12 @@ final class EditCategoryViewController: UIViewController {
     private var viewModel: EditCategoryViewModel
     
     private lazy var categoryNameTextField: TextFieldWithErrorView = {
-       let view = TextFieldWithErrorView(placeholder: "Введите название категории")
+        let view = TextFieldWithErrorView(placeholder: NSLocalizedString("category_name.text_field.placeholder", comment: "Введите название категории"))
         view.translatesAutoresizingMaskIntoConstraints = false
         view.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
         view.setText(viewModel.name)
         switch viewModel.isNameErrorActive {
-            case true: view.showError("Ограничение 38 символов")
+            case true: view.showError(NSLocalizedString("category_name.text_field.max_limit_error", comment: "Ограничение 38 символов"))
             case false: view.hideError()
         }
         return view
@@ -25,7 +25,7 @@ final class EditCategoryViewController: UIViewController {
     
     private lazy var saveButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Готово", for: .normal)
+        button.setTitle(NSLocalizedString("category_save_button.title", comment: "Готово"), for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.setTitleColor(.ypWhite, for: .normal)
         button.layer.cornerRadius = Constants.cornerRadius
@@ -68,7 +68,7 @@ final class EditCategoryViewController: UIViewController {
         
         viewModel.isNameErrorActiveBinding = { [weak self] isActive in
             if isActive {
-                self?.categoryNameTextField.showError("Ограничение 38 символов")
+                self?.categoryNameTextField.showError(NSLocalizedString("category_name.text_field.max_limit_error", comment: "Ограничение 38 символов"))
             } else {
                 self?.categoryNameTextField.hideError()
             }

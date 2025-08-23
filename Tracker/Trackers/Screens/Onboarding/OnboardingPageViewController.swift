@@ -25,7 +25,7 @@ final class OnboardingPageViewController: UIViewController {
     private var captionLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 32, weight: .bold)
-        label.textColor = .ypBlack
+        label.textColor = .onboardingBlack
         label.numberOfLines = 0
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -35,9 +35,9 @@ final class OnboardingPageViewController: UIViewController {
     
     private lazy var button: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Вот это технологии!", for: .normal)
-        button.backgroundColor = .ypBlack
-        button.setTitleColor(.ypWhite, for: .normal)
+        button.setTitle(NSLocalizedString("onboarding.ok_button.title", comment:"Вот это технологии!"), for: .normal)
+        button.backgroundColor = .onboardingBlack
+        button.setTitleColor(.onboardingWhite, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false

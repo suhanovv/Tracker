@@ -21,10 +21,15 @@ final class TrackerCard: UICollectionViewCell {
     var viewModel: TrackerCardViewModelProtocol? {
         didSet {
             nameLabel.text = viewModel?.trackerName
-            daysLabel.text = viewModel?.daysCountString
             emojiLabel.text = viewModel?.emoji
             plusButton.isEnabled = viewModel?.isActive ?? false
             updateButtonState(isChecked: viewModel?.isCompleted ?? false)
+            
+            if let daysCount = viewModel?.daysCount {
+                daysLabel.text = String.localizedStringWithFormat(
+                    NSLocalizedString("daysCount", comment: ""),
+                    daysCount)
+            }
             
             if let color = viewModel?.cardColor {
                 quantityView.backgroundColor = UIColor.fromCardColor(color)
@@ -51,6 +56,7 @@ final class TrackerCard: UICollectionViewCell {
         let stackView = UIStackView(arrangedSubviews: [quantityView, trackerView])
         stackView.axis = .vertical
         stackView.distribution = .fill
+        stackView.backgroundColor = .clear
         stackView.translatesAutoresizingMaskIntoConstraints = false
         return stackView
     }()
@@ -105,7 +111,7 @@ final class TrackerCard: UICollectionViewCell {
     lazy private var plusButton: UIButton = {
         let button: UIButton = UIButton()
         button.setImage(UIImage(systemName: "plus"), for: .normal)
-        button.tintColor = .white
+        button.tintColor = .ypWhite
         button.layer.cornerRadius = ViewConstants.plusButtonSize / 2
         button.clipsToBounds = true
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -127,6 +133,7 @@ final class TrackerCard: UICollectionViewCell {
     }
     
     @objc private func handlePlusButtonTapped() {
+        AnalyticService.send(event: .click(screen: .main, item: .track))
         viewModel?.toggleComplete()
     }
     
@@ -148,7 +155,8 @@ final class TrackerCard: UICollectionViewCell {
 extension TrackerCard {
     
     private func setupAppearance() {
-        contentView.backgroundColor = .ypWhite
+        contentView.backgroundColor = .clear
+        contentView.layer.cornerRadius = Constants.cornerRadius
     }
     
     private func setupView() {

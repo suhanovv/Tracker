@@ -32,6 +32,8 @@ final class ScheduleCell: UIView {
     private lazy var checkbox: UISwitch = {
         let view = UISwitch()
         view.onTintColor = .ypBlue
+        view.backgroundColor = .ypLightGray
+        view.layer.cornerRadius = 16
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -46,8 +48,7 @@ final class ScheduleCell: UIView {
     init(with day: DayOfWeek, initialValue: Bool = false, divider: Bool = true) {
         self.day = day
         super.init(frame: .zero)
-        
-        label.text = day.rawValue
+        label.text = day.fullName()
         checkbox.isOn = initialValue
         setupView()
         setupConstraints()

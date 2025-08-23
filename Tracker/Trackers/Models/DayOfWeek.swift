@@ -30,13 +30,25 @@ public enum DayOfWeek: String, CaseIterable, Codable {
     
     func shortName() -> String {
         switch self {
-        case .monday: return "Пн"
-        case .tuesday: return "Вт"
-        case .wednesday: return "Ср"
-        case .thursday: return "Чт"
-        case .friday: return "Пт"
-        case .saturday: return "Сб"
-        case .sunday: return "Вс"
+        case .monday: return NSLocalizedString("weekday.monday.short", comment: "Понедельник")
+        case .tuesday: return NSLocalizedString("weekday.tuesday.short", comment: "Вторник")
+        case .wednesday: return NSLocalizedString("weekday.thursday.short", comment: "Среда")
+        case .thursday: return NSLocalizedString("weekday.wednesday.short", comment: "Четверг")
+        case .friday: return NSLocalizedString("weekday.friday.short", comment: "Пятница")
+        case .saturday: return NSLocalizedString("weekday.saturday.short", comment: "Суббота")
+        case .sunday: return NSLocalizedString("weekday.sunday.short", comment: "Воскресенье")
+        }
+    }
+    
+    func fullName() -> String {
+        switch self {
+        case .monday: return NSLocalizedString("weekday.monday.full", comment: "Понедельник")
+        case .tuesday: return NSLocalizedString("weekday.tuesday.full", comment: "Вторник")
+        case .wednesday: return NSLocalizedString("weekday.thursday.full", comment: "Среда")
+        case .thursday: return NSLocalizedString("weekday.wednesday.full", comment: "Четверг")
+        case .friday: return NSLocalizedString("weekday.friday.full", comment: "Пятница")
+        case .saturday: return NSLocalizedString("weekday.saturday.full", comment: "Суббота")
+        case .sunday: return NSLocalizedString("weekday.sunday.full", comment: "Воскресенье")
         }
     }
     

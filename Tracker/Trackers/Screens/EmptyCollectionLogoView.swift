@@ -52,7 +52,9 @@ final class EmptyCollectionLogoView: UIView {
         ])
     }
     
-    func show() {
+    func show(labelText: String, resource: ImageResource) {
+        trackerLogoLabel.text = labelText
+        trackerLogo.image = UIImage(resource: resource)
         isHidden = false
     }
     

@@ -16,6 +16,8 @@ final class TrackersViewController: UIViewController {
         static let columnsCount: CGFloat = 2
         static let interitemSpacing: CGFloat = 9
     }
+    
+    private let cellHeight: CGFloat = 148
 
     // MARK: - Properties
     
@@ -32,30 +34,37 @@ final class TrackersViewController: UIViewController {
     }
     
     private func bind() {
-        viewModel.selectedDateBinding = {[weak self] _ in
+        viewModel.selectedDateBinding = {[weak self] date in
             self?.collectionView.reloadData()
             self?.updateEmptyLogoVisibility()
+            self?.dateButton.setDate(date, animated: true)
         }
         viewModel.searchTextBinding = {[weak self] _ in
             self?.collectionView.reloadData()
             self?.updateEmptyLogoVisibility()
         }
-        viewModel.trackersChangedBinding = { [weak self] update in
+        viewModel.trackersChangedBinding = {[weak self] update in
             guard let self else { return }
-            
             self.collectionView.performBatchUpdates {
                 self.collectionView.insertSections(update.insertedSections)
+                self.collectionView.reloadSections(update.updatedSections)
                 self.collectionView.deleteSections(update.deletedSections)
                 self.collectionView.insertItems(at: Array(update.insertedIndexes))
-                self.collectionView.deleteItems(at: Array(update.deletedIndexes))
                 self.collectionView.reloadItems(at: Array(update.updatedIndexes))
-
+                self.collectionView.deleteItems(at: Array(update.deletedIndexes))
             }
-            self.updateEmptyLogoVisibility()
+            
         }
         viewModel.categoriesChangedBinding = { [weak self] in
             self?.collectionView.reloadData()
+        }
+        viewModel.selectedFilterBinding = { [weak self] in
+            self?.collectionView.reloadData()
+        }
+        
+        viewModel.trackersSearchResultBinding = { [weak self] _ in
             self?.updateEmptyLogoVisibility()
+            self?.updateFilterButtonVisibility()
         }
     }
     
@@ -67,14 +76,14 @@ final class TrackersViewController: UIViewController {
         datePicker.preferredDatePickerStyle = .compact
         datePicker.tintColor = .ypBlack
         datePicker.translatesAutoresizingMaskIntoConstraints = false
-        datePicker.addTarget(
-            self, action: #selector(datePickerValueChanged), for: .valueChanged)
+        datePicker.addTarget(self, action: #selector(datePickerValueChanged), for: .valueChanged)
+        
         return datePicker
     }()
     
     private lazy var emptyTrackersLogo: EmptyCollectionLogoView = {
         let emptyView = EmptyCollectionLogoView(
-            labelText: "Что будем отслеживать?",
+            labelText: NSLocalizedString("emptyTrackersLogoLabelText", comment: "Что будем отслеживать?"),
             resource: .emptyTrackersLogo
         )
         emptyView.translatesAutoresizingMaskIntoConstraints = false
@@ -86,12 +95,15 @@ final class TrackersViewController: UIViewController {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: collectionViewLayout)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.backgroundColor = .ypWhite
+        collectionView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 66, right: 0)
+        collectionView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(hideKeyboard)))
+        
         return collectionView
     }()
     
     private lazy var searchBar: UISearchTextField = {
         let view = UISearchTextField()
-        view.placeholder = "Поиск"
+        view.placeholder = NSLocalizedString("search", comment: "Поиск")
         view.layer.cornerRadius = Constants.cornerRadius
         view.backgroundColor = .ypInputGrey
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -102,12 +114,23 @@ final class TrackersViewController: UIViewController {
         return view
     }()
     
+    lazy private var filterButton: UIButton = {
+        let button = UIButton(type: .custom)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.backgroundColor = .ypBlue
+        button.layer.cornerRadius = Constants.cornerRadius
+        button.setTitle(NSLocalizedString("filters", comment: "Фильтры"), for: .normal)
+        button.addTarget(self, action: #selector(filterButtonTapped), for: .touchUpInside)
+        
+        return button
+    }()
+    
     // MARK: - Handlers
     
     @objc private func addButtonTapped() {
         let createTrackerVC = CreateTrackerViewController()
-        
         let navigation = UINavigationController(rootViewController: createTrackerVC)
+        AnalyticService.send(event: .click(screen: .main, item: .addTracker))
         
         present(navigation, animated: true)
     }
@@ -120,7 +143,26 @@ final class TrackersViewController: UIViewController {
         viewModel.changeSearchText(sender.text ?? "")
     }
     
+    @objc func filterButtonTapped() {
+        let filtersViewController = FiltersViewController(viewModel: viewModel.filtersViewModel)
+        let navigation = UINavigationController(rootViewController: filtersViewController)
+        AnalyticService.send(event: .click(screen: .main, item: .filter))
+        present(navigation, animated: true)
+    }
+    
+    @objc private func hideKeyboard() {
+        view.endEditing(true)
+    }
+    
     // MARK: - LifeCycle
+    
+    override func viewDidAppear(_ animated: Bool) {
+        AnalyticService.send(event: .open(screen: .main))
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        AnalyticService.send(event: .close(screen: .main))
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -133,10 +175,20 @@ final class TrackersViewController: UIViewController {
     }
 
     private func updateEmptyLogoVisibility() {
-        if viewModel.numberOfSections == 0 {
-            emptyTrackersLogo.show()
-        } else {
-            emptyTrackersLogo.hide()
+        switch viewModel.trackersSearchResult {
+            case .notEmpty: emptyTrackersLogo.hide()
+            case .noSearchResult:
+                emptyTrackersLogo
+                    .show(labelText: NSLocalizedString("filters.noSearchResult", comment: "Ничего не найдено"), resource: .notFoundTrackersLogo)
+            case .noTrackers:
+                emptyTrackersLogo.show(labelText: NSLocalizedString("emptyTrackersLogoLabelText", comment: "Что будем отслеживать?"), resource: .emptyTrackersLogo)
+        }
+    }
+    
+    private func updateFilterButtonVisibility() {
+        switch viewModel.trackersSearchResult {
+            case .notEmpty, .noSearchResult: filterButton.isHidden = false
+            case .noTrackers: filterButton.isHidden = true
         }
     }
 }
@@ -157,12 +209,74 @@ extension TrackersViewController: UICollectionViewDataSource {
             let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: "trackerCell",
                 for: indexPath) as? TrackerCard,
-            let trackerViewModel = viewModel.trackerAt(indexPath)
+            let trackerViewModel = viewModel.trackerViewModelAt(indexPath)
         else { return UICollectionViewCell()}
         
         cell.viewModel = trackerViewModel
 
         return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, contextMenuConfiguration configuration: UIContextMenuConfiguration, highlightPreviewForItemAt indexPath: IndexPath) -> UITargetedPreview? {
+        makeTargetPreview(collectionView: collectionView, configuration: configuration)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, contextMenuConfiguration configuration: UIContextMenuConfiguration, dismissalPreviewForItemAt indexPath: IndexPath) -> UITargetedPreview? {
+        makeTargetPreview(collectionView: collectionView, configuration: configuration)
+    }
+    
+    private func makeTargetPreview(collectionView: UICollectionView, configuration: UIContextMenuConfiguration) -> UITargetedPreview? {
+        guard let indexPath = configuration.identifier as? IndexPath else { return nil }
+        guard let selectedCell = collectionView.cellForItem(at: indexPath) as? TrackerCard else { return nil }
+        let parameters = UIPreviewParameters()
+        let cellWidth = getCellWidth(collectionView: collectionView)
+        parameters.visiblePath = .init(
+            roundedRect: CGRect(x: 0, y: 0, width: cellWidth, height: cellHeight),
+            cornerRadius: Constants.cornerRadius
+        )
+        parameters.backgroundColor = .clear
+        return UITargetedPreview(view: selectedCell.contentView, parameters: parameters)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemsAt indexPaths: [IndexPath], point: CGPoint) -> UIContextMenuConfiguration? {
+        guard let indexPath = indexPaths.first else { return nil }
+        return UIContextMenuConfiguration(
+            identifier: indexPath as NSCopying,
+            previewProvider: { [weak self] in
+                guard let self else { return nil }
+                let preview = TrackerCardPreview()
+                preview.viewModel = self.viewModel.trackerViewModelAt(indexPath)
+                let cellWidth = getCellWidth(collectionView: self.collectionView)
+                preview.preferredContentSize = CGSize(width: cellWidth, height: 90)
+                
+                return preview
+            },
+            actionProvider: { actions in
+            return UIMenu(children: [
+                UIAction(title: NSLocalizedString("context_menu_trackers_edit", comment: "Редактировать")) { [weak self] _ in
+                    guard let tracker = self?.viewModel.editTrackerViewModelAt(indexPath) else { return }
+                    let vc = EditTrackerViewController(viewModel: tracker)
+                    let navigation = UINavigationController(rootViewController: vc)
+                    vc.title = NSLocalizedString("habit_editing_title", comment: "Редактирование привычки")
+                    AnalyticService.send(event: .click(screen: .main, item: .edit))
+                    self?.present(navigation, animated: true)
+
+                },
+                UIAction(title: NSLocalizedString("context_menu_trackers_delete", comment: "Удалить"), attributes: .destructive) { [weak self] _ in
+                    let alert = UIAlertController(
+                        title: NSLocalizedString("delete_tracker_confirmation_title", comment: "Этот трекер точно не нужен?"),
+                        message: nil,
+                        preferredStyle: .actionSheet
+                    )
+                    alert.addAction(UIAlertAction(title: NSLocalizedString("delete_trackers_confirmation_delete", comment: "Удалить"), style: .destructive) { [weak self] _ in
+                        self?.viewModel.removeTracker(at: indexPath)
+                    })
+                    alert.addAction(UIAlertAction(title: NSLocalizedString("delete_trackers_confirmation_cancel", comment: "Отмена"), style: .cancel))
+                    AnalyticService.send(event: .click(screen: .main, item: .delete))
+                    self?.present(alert, animated: true)
+                }
+            ])
+        })
     }
 }
 
@@ -174,10 +288,14 @@ extension TrackersViewController: UICollectionViewDelegateFlowLayout {
         layout collectionViewLayout: UICollectionViewLayout,
         sizeForItemAt indexPath: IndexPath
     ) -> CGSize {
+        let cellWidth = getCellWidth(collectionView: collectionView)
+        return CGSize(width: cellWidth, height: cellHeight)
+    }
+    
+    private func getCellWidth(collectionView: UICollectionView) -> CGFloat {
         let paddingWidth: CGFloat = ViewConstants.sidesIndent * ViewConstants.columnsCount + ViewConstants.columnsCount * ViewConstants.interitemSpacing / 2
         let availableWidth = collectionView.frame.width - paddingWidth
-        let cellWidth = availableWidth / CGFloat(ViewConstants.columnsCount)
-        return CGSize(width: cellWidth, height: 148)
+        return availableWidth / CGFloat(ViewConstants.columnsCount)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
@@ -223,17 +341,18 @@ extension TrackersViewController: UICollectionViewDelegateFlowLayout {
 
 extension TrackersViewController {
     private func setupAppearance() {
-        view.backgroundColor = .white
+        view.backgroundColor = .ypWhite
     }
     
     private func setupView() {
-        view.addSubviews(collectionView, emptyTrackersLogo, searchBar)
+        view.addSubviews(collectionView, emptyTrackersLogo, searchBar, filterButton)
     }
     
     private func setupNavigationBar() {
         setupNavigationLeftButton()
         setupNavigationTitle()
         setupNavigationRightButton()
+        setupFilterButtonConstraints()
     }
     
     private func setupNavigationRightButton() {
@@ -253,7 +372,7 @@ extension TrackersViewController {
     }
     
     private func setupNavigationTitle() {
-        navigationItem.title = "Трекеры"
+        navigationItem.title = NSLocalizedString("trackers", comment: "Трекеры")
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationController?.navigationBar.tintColor = .ypBlack
     }
@@ -265,6 +384,7 @@ extension TrackersViewController {
     private func setupCollectionView() {
         configureCollectionViewDelegates()
         setupCollectionViewConstraints()
+        collectionView.contentOffset.y = -100
     }
     
     private func setupEmptyTrackersLogo() {
@@ -313,6 +433,16 @@ extension TrackersViewController {
             emptyTrackersLogo.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -ViewConstants.sidesIndent),
         ])
     }
+    
+    private func setupFilterButtonConstraints() {
+        NSLayoutConstraint.activate([
+            filterButton.heightAnchor.constraint(equalToConstant: 50),
+            filterButton.widthAnchor
+                .constraint(equalToConstant: 114),
+            filterButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            filterButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16)
+        ])
+    }
 }
 
 // MARK: - UISearchTextFieldDelegate
@@ -322,3 +452,5 @@ extension TrackersViewController: UISearchTextFieldDelegate {
         textField.resignFirstResponder()
     }
 }
+
+

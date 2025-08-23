@@ -16,8 +16,8 @@ final class TrackerNameValidator {
         
         var resultDescription: String {
             switch self {
-                case .empty: return "Обязательное поле"
-                case .tooLong: return "Ограничение 38 символов"
+                case .empty: return NSLocalizedString("requiredField", comment: "Обязательное поле")
+                case .tooLong: return NSLocalizedString("tracker_name.text_field.max_limit_error", comment: "Ограничение 38 символов")
                 default: return ""
             }
         }
